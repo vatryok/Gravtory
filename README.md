@@ -2,48 +2,53 @@
 
 # Gravtory
 
-**Temporal-level power. Zero infrastructure. Just your database.**
-
-The Python library for crash-proof workflows, distributed execution, sagas, scheduling, and observability — with no separate server, no message broker, no Redis.
+**Temporal-level reliability. Zero infrastructure. Just your database.**
 
 [![PyPI](https://img.shields.io/pypi/v/gravtory.svg)](https://pypi.org/project/gravtory/)
-[![Python](https://img.shields.io/pypi/pyversions/gravtory.svg)](https://pypi.org/project/gravtory/)
-[![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
-[![Tests](https://github.com/vatryok/gravtory/actions/workflows/ci.yml/badge.svg)](https://github.com/vatryok/gravtory/actions)
+[![Python Requirements](https://img.shields.io/pypi/pyversions/gravtory.svg)](https://pypi.org/project/gravtory/)
+[![License: AGPL 3.0](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
+[![CI Status](https://github.com/vatryok/gravtory/actions/workflows/ci.yml/badge.svg)](https://github.com/vatryok/gravtory/actions)
 [![Coverage](https://img.shields.io/codecov/c/github/vatryok/gravtory)](https://codecov.io/gh/vatryok/gravtory)
 
-[Quick Start](#quick-start) · [Examples](examples/)
+*The modern Python framework for crash-proof workflows, distributed execution, sagas, and observables.*<br/>
+*No separate servers. No message brokers. No Redis.*
+
+[Getting Started](#quick-start) •
+[Documentation](docs/) •
+[Examples](examples/) •
+[Contributing](#contributing)
 
 </div>
 
----
 
-## Why Gravtory?
+## The Problem
 
-Every production app eventually needs **workflows that don't break**. A payment that must complete. An order that must ship. A pipeline that must finish. When your process crashes between steps, you need guarantees.
+Every production application eventually needs workflows that do not break. A payment that must complete. An order that must ship. An onboarding pipeline that must finish. When your process crashes between tasks, you need guarantees.
 
-Today, you either:
-- Use **Celery** and accept that tasks can be lost
-- Deploy **Temporal** (2-day setup, 3 services, brutal learning curve)
-- Pay for **Prefect Cloud** or manage an Airflow cluster
-- Build it yourself with retry loops and prayer
+Traditional solutions force architectural trade-offs:
+- **Celery / RQ**: Tasks are frequently lost in the void during crashes.
+- **Temporal**: Exceptional resilience, but requires deploying three separate services, a secondary database, and involves a steep learning curve.
+- **Prefect / Airflow**: Hosted orchestration platforms that abstract execution too far from the core application code.
 
-**Gravtory gives you a third option**: Temporal-level reliability as a Python library, using the database you already have.
+## The Solution
 
-```python
-pip install gravtory[postgres]
+**Gravtory** provides Temporal-tier reliability as a pure Python library, utilizing the database infrastructure you already have in place.
+
+```bash
+pip install "gravtory[postgres]"
 ```
-
-That's the infrastructure.
+That is your entire infrastructure setup.
 
 ---
 
 ## Quick Start
 
-### 1. Define a workflow
+### 1. Define Your Workflow
+Use straightforward decorators to build highly resilient chains.
 
 ```python
 from gravtory import Gravtory, workflow, step
+import stripe, inventory, email
 
 grav = Gravtory("postgresql://localhost/mydb")
 
@@ -63,414 +68,115 @@ class OrderWorkflow:
         await email.send(order_id)
 ```
 
-### 2. Run it
-
+### 2. Run Execution
 ```python
 await grav.start()
 result = await grav.run(OrderWorkflow, order_id="ord_abc123")
 ```
 
-### 3. It survives anything
+### 3. Fault Tolerance
+If your application server crashes during `reserve_inventory`:
+- **Step 1 is never re-executed**. Its output was securely and atomically checkpointed directly to your database.
+- The pipeline effortlessly resumes precisely where it left off once the server restarts.
 
-```
-First run:     step 1 [OK] -> step 2 [OK] -> step 3 [OK]    (completes normally)
-Crash at step 2: step 1 [OK] -> step 2 [CRASH]              (process dies)
-Auto-resume:   step 1 [SKIP] -> step 2 [OK] -> step 3 [OK]    (step 1 NOT re-executed)
-```
+> [!TIP]
+> Run multiple processes or deploy across multiple machines. Gravtory coordinates concurrency entirely through your database.
 
-**Step 1 (charge card) is NEVER re-executed.** Its output was atomically checkpointed to your database. On restart, Gravtory loads the checkpoint and continues from where it left off.
 
----
+## Technical Features
 
-## Features
+### Core Reliability
+- **Atomic Checkpointing**: Process state is saved atomically as discrete tasks complete.
+- **Idempotency Guarantee**: A successfully completed step will never run twice.
+- **Flexible Backends**: Drop-in support for PostgreSQL, MySQL, SQLite, MongoDB, and Redis.
 
-<table>
-<tr><td>
+### Orchestration Patterns
+- **Sagas & Rollbacks**: Automatic compensation functions handle distributed rollbacks if a subsequent step fails.
+- **Parallel Execution**: Process thousands of concurrent fan-out steps safely.
+- **Conditional Branching**: Smart DAG-based routing dynamically based on previous task outputs.
+- **Human-in-the-Loop**: Pause workflows indefinitely until an external signal (e.g., a dashboard approval) triggers continuation.
 
-### Core
-- **Crash-safe execution** — steps checkpointed atomically
-- **Exact resume** — restart from the precise failed step
-- **Idempotency** — no step ever runs twice
-- **5 backends** — PostgreSQL, SQLite, MySQL, MongoDB, Redis
-- **Zero infrastructure** — uses YOUR database
+### Observability & Operations
+- **Built-in Dashboard**: Visualize workflows, debug failures, and view internal logs via a built-in web UI.
+- **OpenTelemetry Native**: First-class support for OpenTelemetry traces and Prometheus metrics.
+- **Cron Scheduling**: Execute reliable background jobs without external dependencies.
+- **Dead Letter Queues**: Safely isolate, inspect, and replay irrecoverable task failures.
 
-</td><td>
+### AI Native Capabilities
+- First-class support for LLM pipelines and agent-loops.
+- Native streaming outputs and granular token tracking.
+- Fallback mechanics to ensure continuous operation for non-deterministic steps.
 
-### Patterns
-- **Saga compensation** — automatic rollback on failure
-- **Parallel fan-out/in** — process 1000 items concurrently
-- **Conditional branching** — if/else in workflows
-- **Sub-workflows** — composable, nested workflows
-- **Circuit breaker** — protect external services
 
-</td></tr>
-<tr><td>
+## Architecture Comparison
 
-### Distribution
-- **Multi-worker** — scale to N processes
-- **Multi-machine** — distribute across machines via DB
-- **Priority queues** — urgent work goes first
-- **Rate limiting** — control API call rates
-- **Graceful shutdown** — no work lost during deploys
+| Feature | Gravtory | Temporal | Celery | Prefect |
+| :--- | :---: | :---: | :---: | :---: |
+| **New Infrastructure** | **None** | Server + DB + Workers | Redis / RMQ | Server |
+| **Setup Time** | **< 3 min** | Days | Hours | Hours |
+| **Architecture** | **Library** | Service | Lib + Broker | Service |
+| **Crash Safety** | **Yes** | Yes | No | Partial |
+| **Stateful Sagas** | **Native** | Yes | No | No |
+| **Type Safe API** | **Fully** | No | No | No |
 
-</td><td>
 
-### Operations
-- **Cron scheduling** — built-in, no external tool
-- **Signals** — send data to running workflows
-- **Human-in-the-loop** — approval gates
-- **OpenTelemetry** — traces and metrics
-- **Built-in dashboard** — no separate UI to deploy
+## Ecosystem & Tooling
 
-</td></tr>
-<tr><td>
+### CLI Management
+Gravtory ships with a powerful CLI out of the box for monitoring and control:
+```bash
+# Monitor failed workflows
+gravtory list --status=failed
 
-### Developer Experience
-- **Type-safe** — Pydantic models for step I/O
-- **Testing framework** — in-memory, no DB needed
-- **CLI tool** — manage workflows from terminal
-- **Rich errors** — context + suggestions
+# Pause workflow execution and wait for specific events
+gravtory signal expense-42 approval '{"approved": true}'
 
-</td><td>
-
-### AI/ML Native
-- **LLM step** — checkpointed AI calls
-- **Streaming** — SSE-compatible streamed outputs
-- **Token tracking** — usage and cost per workflow
-- **Model fallback** — automatic failover
-- **Agent loops** — durable tool-calling agents
-
-</td></tr>
-<tr><td>
-
-### Enterprise
-- **Audit logging** — track all workflow operations
-- **Key rotation** — rotate encryption keys safely
-- **DLQ management** — inspect, retry, purge failed work
-- **Workflow versioning** — migrate between versions
-- **Admin operations** — cancel, retry, purge workflows
-
-</td><td>
-
-### Security
-- **AES-256-GCM encryption** — checkpoint data at rest
-- **Restricted pickle** — allowlist-based unpickling
-- **CORS allowlist** — dashboard origin control
-- **Bearer auth** — dashboard API authentication
-- **Input validation** — Pydantic schema enforcement
-
-</td></tr>
-</table>
-
----
-
-## Comparison
-
-| | Celery | Temporal | Prefect | DBOS | **Gravtory** |
-|---|---|---|---|---|---|
-| Infrastructure | Redis/RMQ | Server+DB+Workers | Server | None | **None** |
-| Setup time | ~30 min | ~2 days | ~2 hours | ~10 min | **~3 min** |
-| Library vs Service | Lib+Broker | Service | Service | Library | **Library** |
-| Crash-safe | [FAIL] | [PASS] | Partial | [PASS] | **[PASS]** |
-| Distributed workers | [PASS] | [PASS] | [PASS] | [FAIL] | **[PASS]** |
-| Saga compensation | [FAIL] | [PASS] | [FAIL] | [FAIL] | **[PASS]** |
-| Signals | [FAIL] | [PASS] | [FAIL] | [FAIL] | **[PASS]** |
-| Scheduling | Celery Beat | Schedules | [PASS] | [PASS] | **[PASS]** |
-| Dashboard | Flower | [PASS] | [PASS] | [FAIL] | **[PASS]** |
-| Type-safe | [FAIL] | [FAIL] | [FAIL] | [FAIL] | **[PASS]** |
-| Testing framework | [FAIL] | [PASS] | [FAIL] | [FAIL] | **[PASS]** |
-| AI/LLM native | [FAIL] | [FAIL] | [FAIL] | [FAIL] | **[PASS]** |
-| Backends | Redis/RMQ | PG/Cassandra | PG | PG only | **5 DBs** |
-| License | BSD | MIT | Apache | MIT | **AGPL** |
-
----
-
-## Patterns
-
-### Saga with Automatic Compensation
-
-```python
-@grav.workflow(id="transfer-{id}")
-@saga
-class TransferWorkflow:
-
-    @step(1, compensate="refund")
-    async def debit(self, amount: Decimal) -> dict:
-        return await bank.debit(self.source, amount)
-
-    @step(2, depends_on=1, compensate="reverse")
-    async def credit(self, amount: Decimal) -> dict:
-        return await bank.credit(self.dest, amount)
-
-    async def refund(self, output: dict):
-        await bank.credit(self.source, output["amount"])
-
-    async def reverse(self, output: dict):
-        await bank.reverse(output["transaction_id"])
-
-# If credit fails → refund runs automatically (crash-safe!)
+# Launch the visual dashboard locally
+gravtory dashboard
 ```
 
-### Parallel Processing
-
-```python
-@grav.workflow(id="batch-{id}")
-class BatchWorkflow:
-
-    @step(1)
-    async def get_items(self, id: str) -> list[str]:
-        return await db.get_item_ids(id)
-
-    @step(2, depends_on=1)
-    @parallel(max_concurrency=20)
-    async def process(self, item_id: str) -> dict:
-        return await compute(item_id)
-    # Each item is individually checkpointed.
-    # On crash: only unfinished items re-execute.
-
-    @step(3, depends_on=2)
-    async def summarize(self, results: list[dict]) -> dict:
-        return {"processed": len(results)}
-```
-
-### Human-in-the-Loop
-
-```python
-@grav.workflow(id="expense-{id}")
-class ExpenseWorkflow:
-
-    @step(1)
-    async def submit(self, id: str, amount: float) -> dict:
-        await slack.send(f"Approve expense #{id} (${amount})?")
-        return {"id": id, "amount": amount}
-
-    @step(2, depends_on=1)
-    @wait_for_signal("approval", timeout=timedelta(days=7))
-    async def await_approval(self, signal: dict) -> bool:
-        return signal["approved"]
-
-    @step(3, depends_on=2, condition=lambda ctx: ctx.output(2))
-    async def reimburse(self, id: str) -> None:
-        await accounting.pay(id)
-
-# From your API or Slack bot:
-await grav.signal("expense-42", "approval", {"approved": True})
-```
-
-### Scheduled Workflows
-
-```python
-@grav.workflow(id="daily-report")
-@grav.schedule(cron="0 9 * * *", tz="US/Eastern")
-class DailyReport:
-
-    @step(1)
-    async def generate(self) -> dict:
-        return await analytics.report()
-
-    @step(2, depends_on=1)
-    async def send(self, report: dict) -> None:
-        await email.send_report(report)
-```
-
-### Retry with Backoff
-
-```python
-@step(1, retries=5, backoff="exponential", backoff_base=2.0, retry_on=[httpx.TimeoutError])
-async def call_external_api(self, url: str) -> dict:
-    return await httpx.get(url).json()
-# Retries at: 2s, 4s, 8s, 16s, 32s (with jitter)
-```
-
----
-
-## Distribution (No Message Broker)
-
-```python
-# Scale from 1 to N workers — just change a number
-grav = Gravtory("postgresql://localhost/mydb", workers=8)
-
-# Scale across machines — same code, different machines
-# Machine A:
-grav = Gravtory("postgresql://shared-db/workflows", workers=8, node_id="a")
-# Machine B:
-grav = Gravtory("postgresql://shared-db/workflows", workers=8, node_id="b")
-
-# Workers coordinate through the database.
-# No Redis. No RabbitMQ. No Kafka.
-```
-
----
-
-## Observability
-
-```python
-grav = Gravtory(
-    "postgresql://localhost/mydb",
-    dashboard=True,              # Web UI at :7777
-    otel_endpoint="jaeger:4317", # OpenTelemetry traces
-    metrics_port=9090,           # Prometheus metrics
-)
-
-# Introspection API
-state = await grav.inspect("order-ord_123")
-print(state.status)            # "completed"
-print(state.steps[1].output)   # {"charge_id": "ch_xyz"}
-print(state.steps[1].duration_ms)  # 142
-
-# Middleware
-@grav.on_failure
-async def alert(ctx):
-    await slack.send(f"Workflow {ctx.workflow_run_id} failed: {ctx.error}")
-```
-
----
-
-## Testing (No Database Required)
+### Testing Capabilities
+You do not need databases for unit testing. Gravtory ships with an in-memory testing runner:
 
 ```python
 from gravtory.testing import WorkflowTestRunner
 
 async def test_order_workflow():
-    runner = WorkflowTestRunner()  # In-memory!
-    runner.mock(OrderWorkflow.charge_card, return_value={"charge_id": "test"})
-    runner.mock(OrderWorkflow.reserve_inventory, return_value={"ok": True})
-    runner.mock(OrderWorkflow.send_notification, return_value=None)
-
+    runner = WorkflowTestRunner()
+    runner.mock(OrderWorkflow.charge_card, return_value={"id": "test"})
+    
     result = await runner.run(OrderWorkflow, order_id="test_123")
     assert result.status == "completed"
-
-    # Simulate crash and verify resume
-    runner.simulate_crash_after(step=1)
-    result = await runner.run(OrderWorkflow, order_id="test_456")
-    result = await runner.resume("order-test_456")
-    assert result.steps[1].was_replayed  # Not re-executed!
 ```
 
----
 
-## CLI
-
-```bash
-gravtory list --status=failed
-gravtory inspect order-ord_123
-gravtory retry order-ord_123
-gravtory signal expense-42 approval '{"approved": true}'
-gravtory dlq list
-gravtory dashboard
-gravtory workers start --count=4
-```
-
----
 
 ## Installation
 
+Choose your preferred database backend:
+
 ```bash
-# Core + PostgreSQL (recommended)
-pip install gravtory[postgres]
-
-# Core + SQLite (development)
-pip install gravtory[sqlite]
-
-# Core + MySQL
-pip install gravtory[mysql]
-
-# Core + MongoDB
-pip install gravtory[mongodb]
-
-# Everything
-pip install gravtory[all]
+pip install "gravtory[postgres]"  # Recommended for Production
+pip install "gravtory[sqlite]"    # Optimal for local development
+pip install "gravtory[mysql]"     # MySQL / MariaDB support
+pip install "gravtory[mongodb]"   # Document DB
+pip install "gravtory[all]"       # Complete installation
 ```
 
-**Requirements**: Python 3.10+
+*Requires Python 3.10+*
 
-**Type checking**: Gravtory ships with a `py.typed` marker ([PEP 561](https://peps.python.org/pep-0561/)). Full type annotations work out of the box with mypy, pyright, and other type checkers — no stubs package needed.
-
----
-
-## Backends
-
-| Backend | Best For | Distribution | Signals |
-|---|---|---|---|
-| **PostgreSQL** | Production | `SKIP LOCKED` | `LISTEN/NOTIFY` |
-| **SQLite** | Development, testing | File locks | Polling |
-| **MySQL 8+** | Enterprise | `SKIP LOCKED` | Polling |
-| **MongoDB** | Document-heavy | `findOneAndUpdate` | Change Streams |
-| **Redis** | High-throughput | Lua scripts | Pub/Sub |
-
----
-
-## Framework Integration
-
-### FastAPI
-
-```python
-from contextlib import asynccontextmanager
-
-from fastapi import FastAPI
-from gravtory import Gravtory
-
-grav = Gravtory("postgresql://localhost/mydb")
-
-@asynccontextmanager
-async def lifespan(app):
-    await grav.start()
-    yield
-    await grav.shutdown()
-
-app = FastAPI(lifespan=lifespan)
-
-@app.post("/orders/{order_id}")
-async def create_order(order_id: str):
-    run_id = await grav.run(OrderWorkflow, order_id=order_id, background=True)
-    return {"run_id": run_id}
-```
-
-### Django (coming soon)
-
-Django integration is planned for a future release. Track progress
-in [GitHub Issues](https://github.com/vatryok/gravtory/issues).
-
----
-
-## Coming from Celery?
-
-```python
-# Before (Celery)
-@app.task(bind=True, max_retries=3)
-def charge_card(self, order_id):
-    try:
-        result = stripe.charge(order_id)
-    except Exception as exc:
-        raise self.retry(exc=exc)
-    return result
-
-# If this crashes: task may be lost. Result may be lost.
-# If charge succeeds but ack fails: card charged twice.
-
-# After (Gravtory)
-@step(1, retries=3, backoff="exponential")
-async def charge_card(self, order_id: str) -> dict:
-    return await stripe.charge(order_id)
-
-# If this crashes: checkpoint guarantees at-least-once with idempotent replay.
-# On resume: if charge completed, it's loaded from DB. Never re-executed.
-```
-
----
-
-## License
-
-AGPL — open source, copyleft. Keeps the ecosystem open.
-
----
 
 ## Contributing
 
-We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+We welcome structural improvements and bug fixes. Please examine our [Contribution Guidelines](CONTRIBUTING.md) to initialize your local development environment and submit Pull Requests.
 
----
 
-## Support the Project
+## License & Support
 
-Backing the ongoing development efforts is appreciated. [**Support Gravtory on Ko-Fi**](https://ko-fi.com/gravtory)
+**Gravtory** is open-source and dual-licensed.
+- Free for all use cases under the **AGPL-3.0**.
+- Commercial licensing is available for closed-source corporate ecosystems.
+
+For corporate inquiries or support: vatryok@protonmail.com
+
+Support ongoing open-source development through [Ko-Fi](https://ko-fi.com/gravtory)
