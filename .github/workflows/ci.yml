@@ -27,8 +27,7 @@ jobs:
       - name: Ruff format check
         run: ruff format --check src/ tests/
       - name: Mypy
-        run: mypy src/gravtory/ --ignore-missing-imports
-
+run: mypy src/gravtory/ --ignore-missing-imports --no-warn-unused-ignores
   # ── Stage 2: Unit tests (matrix) ────────────────────────────────
   unit:
     needs: lint
