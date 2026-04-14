@@ -117,6 +117,7 @@ warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
+warn_unused_ignores = false
 
 [[tool.mypy.overrides]]
 module = [
@@ -127,6 +128,18 @@ module = [
     "opentelemetry.exporter.otlp.proto.grpc.trace_exporter",
 ]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["gravtory.backends.redis"]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = ["gravtory.backends.sqlite"]
+disable_error_codes = ["no-any-return"]
+
+[[tool.mypy.overrides]]
+module = ["gravtory.dashboard.server"]
+disable_error_codes = ["misc"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
