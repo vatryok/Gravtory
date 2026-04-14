@@ -1,0 +1,85 @@
+site_name: Gravtory
+site_description: "Crash-proof Python workflows with zero infrastructure."
+site_url: https://gravtory.dev
+repo_url: https://github.com/gravtory/gravtory
+repo_name: gravtory/gravtory
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: deep purple
+      accent: amber
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: deep purple
+      accent: amber
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - content.code.copy
+    - content.code.annotate
+    - search.suggest
+    - search.highlight
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_source: true
+            show_root_heading: true
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - admonition
+  - pymdownx.details
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation: getting-started/installation.md
+      - Quick Start: getting-started/quickstart.md
+      - Core Concepts: getting-started/concepts.md
+  - Guides:
+      - Workflows: guides/workflows.md
+      - Steps: guides/steps.md
+      - Sagas: guides/sagas.md
+      - Signals: guides/signals.md
+      - Distribution: guides/distribution.md
+      - Scheduling: guides/scheduling.md
+      - Testing: guides/testing.md
+      - Observability: guides/observability.md
+  - Backends:
+      - Overview: backends/overview.md
+      - PostgreSQL: backends/postgresql.md
+      - SQLite: backends/sqlite.md
+      - MySQL: backends/mysql.md
+      - MongoDB: backends/mongodb.md
+      - Redis: backends/redis.md
+  - API Reference:
+      - Types: api/types.md
+      - Errors: api/errors.md
+      - Backend: api/backend.md
+  - Migration:
+      - From Celery: migration/celery.md
+      - From Temporal: migration/temporal.md
+  - Contributing: contributing.md
+  - Changelog: changelog.md

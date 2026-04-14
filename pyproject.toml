@@ -1,0 +1,131 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "gravtory"
+version = "0.1.0"
+description = "Crash-proof Python workflows with zero infrastructure. Temporal power as a pip install."
+readme = "README.md"
+license = {text = "AGPL-3.0-or-later"}
+requires-python = ">=3.10"
+authors = [
+    { name = "Gravtory Contributors" },
+]
+keywords = [
+    "workflow",
+    "durable-execution",
+    "task-queue",
+    "saga",
+    "orchestration",
+    "crash-proof",
+    "checkpoint",
+    "distributed",
+    "scheduling",
+    "resilience",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Distributed Computing",
+    "Typing :: Typed",
+]
+dependencies = []
+
+[project.optional-dependencies]
+postgres = ["asyncpg>=0.29.0"]
+sqlite = ["aiosqlite>=0.19.0"]
+mysql = ["aiomysql>=0.2.0"]
+mongodb = ["motor>=3.3.0"]
+redis = ["redis[hiredis]>=5.0.0"]
+pydantic = ["pydantic>=2.0.0"]
+msgpack = ["msgpack>=1.0.0"]
+lz4 = ["lz4>=4.3.0"]
+zstd = ["zstandard>=0.22.0"]
+otel = [
+    "opentelemetry-api>=1.20.0",
+    "opentelemetry-sdk>=1.20.0",
+]
+prometheus = ["prometheus-client>=0.19.0"]
+dashboard = ["aiohttp>=3.9.0"]
+ai = ["tiktoken>=0.5.0"]
+all = [
+    "gravtory[postgres,sqlite,mysql,mongodb,redis,pydantic,msgpack,lz4,zstd,otel,prometheus,dashboard,ai]",
+]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=4.1.0",
+    "pytest-timeout>=2.2.0",
+    "hypothesis>=6.90.0",
+    "mypy>=1.8.0",
+    "ruff>=0.2.0",
+    "pre-commit>=3.6.0",
+    "mkdocs>=1.5.0",
+    "mkdocs-material>=9.5.0",
+    "mkdocstrings[python]>=0.24.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/gravtory/gravtory"
+Documentation = "https://gravtory.dev"
+Repository = "https://github.com/gravtory/gravtory"
+Issues = "https://github.com/gravtory/gravtory/issues"
+
+[project.scripts]
+gravtory = "gravtory.cli.main:cli"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/gravtory"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "SIM", "TCH", "RUF"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["gravtory"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "benchmark: marks performance benchmarks",
+    "integration: marks integration tests requiring real DB",
+    "e2e: marks end-to-end tests requiring multi-process",
+]
+
+[tool.coverage.run]
+source = ["src/gravtory"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 95
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "@abstractmethod",
+    "\\.\\.\\.",
+]
