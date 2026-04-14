@@ -1,33 +1,50 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later OR Commercial
+# Copyright (C) 2026 Gravtory Contributors
+#
+# This file is part of Gravtory, licensed under AGPL-3.0-or-later.
+# See LICENSE file in the project root for full license information.
+
 """Gravtory — Crash-proof Python workflows with zero infrastructure.
 
 Temporal power as a pip install. Uses your existing database.
 """
 
 from gravtory._version import __version__
+from gravtory.core.context import StepContext
+from gravtory.core.dag import DAG
+from gravtory.core.engine import Gravtory
 from gravtory.core.errors import (
     BackendConnectionError,
     BackendError,
     BackendLockError,
     BackendMigrationError,
+    CircuitOpenError,
     CompensationError,
+    ConcurrencyLimitError,
     ConfigurationError,
     GravtoryError,
     InvalidWorkflowError,
     SerializationError,
     SignalError,
     SignalTimeoutError,
+    StepAbortError,
     StepConditionError,
     StepDependencyError,
     StepError,
+    StepExhaustedError,
+    StepOutputTypeError,
     StepRetryExhaustedError,
     StepTimeoutError,
+    ValidationError,
     WorkflowAlreadyExistsError,
     WorkflowCancelledError,
     WorkflowDeadlineExceededError,
+    WorkflowDeadlockError,
     WorkflowNotFoundError,
     WorkflowRunAlreadyExistsError,
     WorkflowRunNotFoundError,
 )
+from gravtory.core.id_template import generate_workflow_id
 from gravtory.core.types import (
     Compensation,
     DLQEntry,
@@ -50,22 +67,37 @@ from gravtory.core.types import (
     WorkflowRun,
     WorkflowStatus,
 )
+from gravtory.decorators import (
+    WorkflowProxy,
+    parallel,
+    saga,
+    schedule,
+    step,
+    wait_for_signal,
+    workflow,
+)
+from gravtory.retry.policies import BackoffPolicy, RetryPolicy
 
 __all__ = [
+    "DAG",
     "BackendConnectionError",
     "BackendError",
     "BackendLockError",
     "BackendMigrationError",
+    "BackoffPolicy",
+    "CircuitOpenError",
     "Compensation",
     "CompensationError",
+    "ConcurrencyLimitError",
     "ConfigurationError",
     "DLQEntry",
-    # Errors
+    "Gravtory",
     "GravtoryError",
     "InvalidWorkflowError",
     "Lock",
     "ParallelConfig",
     "PendingStep",
+    "RetryPolicy",
     "Schedule",
     "ScheduleType",
     "SerializationError",
@@ -74,30 +106,40 @@ __all__ = [
     "SignalError",
     "SignalTimeoutError",
     "SignalWait",
+    "StepAbortError",
     "StepConditionError",
+    "StepContext",
     "StepDefinition",
     "StepDependencyError",
     "StepError",
+    "StepExhaustedError",
     "StepOutput",
+    "StepOutputTypeError",
     "StepResult",
     "StepRetryExhaustedError",
     "StepStatus",
     "StepTimeoutError",
+    "ValidationError",
     "WorkerInfo",
     "WorkerStatus",
     "WorkflowAlreadyExistsError",
     "WorkflowCancelledError",
-    # Configuration types
     "WorkflowConfig",
     "WorkflowDeadlineExceededError",
+    "WorkflowDeadlockError",
     "WorkflowDefinition",
     "WorkflowNotFoundError",
-    # Core types
+    "WorkflowProxy",
     "WorkflowRun",
     "WorkflowRunAlreadyExistsError",
     "WorkflowRunNotFoundError",
-    # Enums
     "WorkflowStatus",
-    # Version
     "__version__",
+    "generate_workflow_id",
+    "parallel",
+    "saga",
+    "schedule",
+    "step",
+    "wait_for_signal",
+    "workflow",
 ]

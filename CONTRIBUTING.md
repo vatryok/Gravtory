@@ -12,80 +12,47 @@ Thank you for your interest in contributing to Gravtory! This guide will help yo
 ### Getting Started
 
 ```bash
-# Clone the repository
-git clone https://github.com/gravtory/gravtory.git
+git clone https://github.com/vatryok/gravtory.git
 cd gravtory
 
-# Install in development mode with all extras
-make dev
+# One-command setup (creates venv, installs all deps, runs smoke test)
+./scripts/dev-setup.sh
 
-# Verify everything works
-make test
-make lint
-make typecheck
+# Or manually:
+make dev          # install in editable mode with all extras
+make test         # run unit tests
+make lint         # ruff lint + format check
+make typecheck    # mypy strict
 ```
 
 ## Development Workflow
 
-### 1. Create a Branch
-
-```bash
-git checkout -b feature/your-feature-name
-```
-
-### 2. Make Changes
-
-- Write code following existing patterns
-- Add tests for new functionality
-- Ensure type hints are complete
-
-### 3. Run Checks
-
-```bash
-# Format code
-make format
-
-# Lint
-make lint
-
-# Type check
-make typecheck
-
-# Run tests
-make test
-
-# Run tests with coverage
-make coverage
-```
-
-### 4. Submit a Pull Request
-
-- Fill out the PR template
-- Ensure CI passes
-- Request review
+1. **Branch** from `main`: `git checkout -b feature/your-feature`
+2. **Code** -- follow existing patterns, add type hints everywhere
+3. **Test** -- every feature needs unit tests; backend features need integration tests
+4. **Check** -- `make lint && make typecheck && make coverage`
+5. **PR** -- fill out the template, ensure CI is green
 
 ## Code Style
 
-- **Formatter**: Ruff (auto-formatted)
-- **Linter**: Ruff
-- **Type checker**: mypy (strict mode)
-- **Line length**: 100 characters
-- **Python**: 3.10+ syntax (use `X | Y` unions, not `Union[X, Y]`)
+| Tool | Config |
+|------|--------|
+| **Formatter** | Ruff (`ruff format`) |
+| **Linter** | Ruff (`ruff check`) |
+| **Type checker** | mypy strict mode |
+| **Line length** | 100 characters |
+| **Python** | 3.10+ syntax (`X | Y` unions) |
+| **Editor** | `.editorconfig` in repo root — configure your IDE to use it |
 
-## Testing Guidelines
-
-- Every new feature needs unit tests
-- Integration tests for backend interactions
-- Use `pytest-asyncio` for async tests
-- Target 95%+ code coverage
-
-### Test Structure
+## Test Structure
 
 ```
 tests/
-  unit/           # Fast, no I/O, mocked dependencies
+  unit/           # Fast, no I/O, mocked deps
   integration/    # Real database, single process
   e2e/            # Multi-process, crash simulation
+  property/       # Hypothesis property-based tests
+  benchmarks/     # pytest-benchmark performance tests (also at repo root benchmarks/)
 ```
 
 ## Architecture
@@ -101,26 +68,37 @@ src/gravtory/
   observability/  # OpenTelemetry, Prometheus, middleware
   testing/        # In-memory test runner
   cli/            # Command-line interface
-  contrib/        # Framework integrations (Django, FastAPI)
   dashboard/      # Web UI
+```
+
+## Build & Release
+
+```bash
+./scripts/build.sh          # Full build: lint + test + package
+./scripts/build.sh --quick  # Package only
+./scripts/release.sh        # Build + create release folder
 ```
 
 ## Commit Messages
 
 Use [Conventional Commits](https://www.conventionalcommits.org/):
 
-```
-feat: add PostgreSQL backend
-fix: handle connection timeout in worker pool
-docs: update quickstart guide
-test: add saga compensation tests
-refactor: simplify checkpoint engine
-```
+- `feat:` new feature
+- `fix:` bug fix
+- `docs:` documentation only
+- `test:` adding or fixing tests
+- `refactor:` code change that neither fixes a bug nor adds a feature
+- `ci:` CI/CD changes
+- `chore:` maintenance tasks (dependencies, tooling)
+- `perf:` performance improvement
+- `BREAKING CHANGE:` in the commit body triggers a major version bump
+
+Versioning is managed by [commitizen](https://commitizen-tools.github.io/commitizen/).
+Run `cz bump` to create a release (updates version, changelog, and tags).
 
 ## Questions?
 
-- Open a [GitHub Discussion](https://github.com/gravtory/gravtory/discussions)
-- Join our [Discord](https://discord.gg/gravtory)
+- Open a [GitHub Discussion](https://github.com/vatryok/gravtory/discussions)
 
 ## License
 

@@ -1,0 +1,581 @@
+openapi: 3.1.0
+info:
+  title: Gravtory Dashboard API
+  description: |
+    REST API for the Gravtory workflow engine dashboard.
+    Provides workflow management, monitoring, and operational endpoints.
+  version: 0.1.0
+  license:
+    name: AGPL-3.0-or-later
+    url: https://www.gnu.org/licenses/agpl-3.0.html
+  contact:
+    email: vatryok@protonmail.com
+
+servers:
+  - url: http://localhost:7777
+    description: Local development
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: Workflows
+    description: Workflow run management
+  - name: DLQ
+    description: Dead Letter Queue operations
+  - name: Workers
+    description: Worker monitoring
+  - name: Schedules
+    description: Schedule management
+  - name: System
+    description: Health, stats, and events
+
+paths:
+  /api/workflows:
+    get:
+      tags: [Workflows]
+      summary: List workflow runs
+      operationId: listWorkflows
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, running, completed, failed, cancelled, compensating, compensated, compensation_failed]
+        - name: workflow_name
+          in: query
+          schema:
+            type: string
+        - name: namespace
+          in: query
+          schema:
+            type: string
+            default: default
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+            maximum: 1000
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+      responses:
+        "200":
+          description: List of workflow runs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  workflows:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/WorkflowRun"
+                  count:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+
+  /api/workflows/{run_id}:
+    get:
+      tags: [Workflows]
+      summary: Get workflow run details
+      operationId: getWorkflow
+      parameters:
+        - name: run_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Workflow run with step details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/WorkflowRun"
+                  - type: object
+                    properties:
+                      steps:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/StepOutput"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/workflows/{run_id}/retry:
+    post:
+      tags: [Workflows]
+      summary: Retry a failed workflow
+      operationId: retryWorkflow
+      parameters:
+        - name: run_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Workflow queued for retry
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: retrying
+                  run_id:
+                    type: string
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/workflows/{run_id}/cancel:
+    post:
+      tags: [Workflows]
+      summary: Cancel a running workflow
+      operationId: cancelWorkflow
+      parameters:
+        - name: run_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Workflow cancelled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: cancelled
+                  run_id:
+                    type: string
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/workflows/{run_id}/steps:
+    get:
+      tags: [Workflows]
+      summary: List steps for a workflow run
+      operationId: getSteps
+      parameters:
+        - name: run_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of step outputs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  steps:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/StepOutput"
+
+  /api/workflows/{run_id}/signals/{name}:
+    post:
+      tags: [Workflows]
+      summary: Send a signal to a workflow
+      operationId: sendSignal
+      parameters:
+        - name: run_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  description: Signal payload
+      responses:
+        "200":
+          description: Signal sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: signal_sent
+                  signal_name:
+                    type: string
+                  run_id:
+                    type: string
+
+  /api/dlq:
+    get:
+      tags: [DLQ]
+      summary: List DLQ entries
+      operationId: listDlq
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+      responses:
+        "200":
+          description: DLQ entries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  entries:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/DLQEntry"
+                  total:
+                    type: integer
+    delete:
+      tags: [DLQ]
+      summary: Purge all DLQ entries
+      operationId: purgeDlq
+      responses:
+        "200":
+          description: DLQ purged
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted:
+                    type: integer
+
+  /api/dlq/{entry_id}/retry:
+    post:
+      tags: [DLQ]
+      summary: Retry a DLQ entry
+      operationId: retryDlq
+      parameters:
+        - name: entry_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Entry retried
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: retrying
+                  entry_id:
+                    type: integer
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /api/workers:
+    get:
+      tags: [Workers]
+      summary: List registered workers
+      operationId: listWorkers
+      responses:
+        "200":
+          description: Worker list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  workers:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/WorkerInfo"
+
+  /api/schedules:
+    get:
+      tags: [Schedules]
+      summary: List all schedules
+      operationId: listSchedules
+      responses:
+        "200":
+          description: Schedule list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  schedules:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Schedule"
+
+  /api/schedules/{schedule_id}/toggle:
+    post:
+      tags: [Schedules]
+      summary: Toggle a schedule on/off
+      operationId: toggleSchedule
+      parameters:
+        - name: schedule_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Schedule toggled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  enabled:
+                    type: boolean
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/stats:
+    get:
+      tags: [System]
+      summary: Get system statistics
+      operationId: getStats
+      parameters:
+        - name: namespace
+          in: query
+          schema:
+            type: string
+            default: default
+      responses:
+        "200":
+          description: System statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_workflows:
+                    type: integer
+                  running:
+                    type: integer
+                  failed:
+                    type: integer
+                  completed:
+                    type: integer
+                  dlq_size:
+                    type: integer
+                  active_workers:
+                    type: integer
+                  schedules:
+                    type: integer
+
+  /api/health:
+    get:
+      tags: [System]
+      summary: Health check
+      operationId: healthCheck
+      security: []
+      responses:
+        "200":
+          description: Health status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [healthy, unhealthy]
+                  backend:
+                    type: string
+                  uptime_seconds:
+                    type: number
+
+  /api/events:
+    get:
+      tags: [System]
+      summary: Server-Sent Events stream
+      operationId: sseEvents
+      responses:
+        "200":
+          description: SSE event stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: Dashboard auth token (set via GRAVTORY_DASHBOARD_TOKEN)
+
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+
+  schemas:
+    WorkflowRun:
+      type: object
+      properties:
+        id:
+          type: string
+        workflow_name:
+          type: string
+        workflow_version:
+          type: integer
+        namespace:
+          type: string
+        status:
+          type: string
+          enum: [pending, running, completed, failed, cancelled, compensating, compensated, compensation_failed]
+        current_step:
+          type: integer
+          nullable: true
+        error_message:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    StepOutput:
+      type: object
+      properties:
+        id:
+          type: integer
+        workflow_run_id:
+          type: string
+        step_order:
+          type: integer
+        step_name:
+          type: string
+        status:
+          type: string
+          enum: [pending, running, completed, failed, skipped]
+        duration_ms:
+          type: integer
+          nullable: true
+        retry_count:
+          type: integer
+        error_message:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    DLQEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        workflow_run_id:
+          type: string
+        step_order:
+          type: integer
+        error_message:
+          type: string
+          nullable: true
+        error_traceback:
+          type: string
+          nullable: true
+        retry_count:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    WorkerInfo:
+      type: object
+      properties:
+        worker_id:
+          type: string
+        node_id:
+          type: string
+        status:
+          type: string
+          enum: [active, draining, stopped]
+        last_heartbeat:
+          type: string
+          format: date-time
+          nullable: true
+        current_task:
+          type: string
+          nullable: true
+        started_at:
+          type: string
+          format: date-time
+
+    Schedule:
+      type: object
+      properties:
+        id:
+          type: string
+        workflow_name:
+          type: string
+        schedule_type:
+          type: string
+          enum: [cron, interval, event, one_time]
+        schedule_config:
+          type: string
+        namespace:
+          type: string
+        enabled:
+          type: boolean
+        last_run_at:
+          type: string
+          format: date-time
+          nullable: true
+        next_run_at:
+          type: string
+          format: date-time
+          nullable: true

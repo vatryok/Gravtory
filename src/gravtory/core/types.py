@@ -1,3 +1,9 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later OR Commercial
+# Copyright (C) 2026 Gravtory Contributors
+#
+# This file is part of Gravtory, licensed under AGPL-3.0-or-later.
+# See LICENSE file in the project root for full license information.
+
 """Core type definitions used throughout the Gravtory library."""
 
 from __future__ import annotations
@@ -22,6 +28,32 @@ class WorkflowStatus(str, Enum):
     COMPENSATED = "compensated"
     COMPENSATION_FAILED = "compensation_failed"
     CANCELLED = "cancelled"
+
+
+# Valid workflow status transitions (state machine enforcement)
+VALID_TRANSITIONS: dict[WorkflowStatus, set[WorkflowStatus]] = {
+    WorkflowStatus.PENDING: {WorkflowStatus.RUNNING, WorkflowStatus.CANCELLED},
+    WorkflowStatus.RUNNING: {
+        WorkflowStatus.COMPLETED,
+        WorkflowStatus.FAILED,
+        WorkflowStatus.COMPENSATING,
+        WorkflowStatus.CANCELLED,
+    },
+    WorkflowStatus.COMPENSATING: {
+        WorkflowStatus.COMPENSATED,
+        WorkflowStatus.COMPENSATION_FAILED,
+    },
+    WorkflowStatus.FAILED: {WorkflowStatus.PENDING},  # manual retry
+    WorkflowStatus.COMPLETED: set(),
+    WorkflowStatus.COMPENSATED: set(),
+    WorkflowStatus.COMPENSATION_FAILED: {WorkflowStatus.PENDING},  # manual retry
+    WorkflowStatus.CANCELLED: set(),
+}
+
+
+def validate_transition(current: WorkflowStatus, target: WorkflowStatus) -> bool:
+    """Return True if the transition from *current* to *target* is valid."""
+    return target in VALID_TRANSITIONS.get(current, set())
 
 
 class StepStatus(str, Enum):
@@ -71,6 +103,43 @@ class WorkflowRun:
     completed_at: datetime | None = None
     deadline_at: datetime | None = None
 
+    @property
+    def is_complete(self) -> bool:
+        """Whether the workflow finished successfully."""
+        return self.status == WorkflowStatus.COMPLETED
+
+    @property
+    def is_failed(self) -> bool:
+        """Whether the workflow failed (including compensation failure)."""
+        return self.status in (WorkflowStatus.FAILED, WorkflowStatus.COMPENSATION_FAILED)
+
+    @property
+    def is_running(self) -> bool:
+        """Whether the workflow is currently executing."""
+        return self.status in (WorkflowStatus.RUNNING, WorkflowStatus.COMPENSATING)
+
+    @property
+    def is_terminal(self) -> bool:
+        """Whether the workflow is in a terminal state (no further transitions)."""
+        return self.status in (
+            WorkflowStatus.COMPLETED,
+            WorkflowStatus.COMPENSATED,
+            WorkflowStatus.CANCELLED,
+        )
+
+    @property
+    def duration(self) -> timedelta | None:
+        """Wall-clock duration from creation to completion (or None if not finished)."""
+        if self.created_at is not None and self.completed_at is not None:
+            return self.completed_at - self.created_at
+        return None
+
+    def __repr__(self) -> str:
+        return (
+            f"WorkflowRun(id={self.id!r}, workflow={self.workflow_name!r}, "
+            f"status={self.status.value}, step={self.current_step})"
+        )
+
 
 @dataclass
 class StepOutput:
@@ -80,13 +149,19 @@ class StepOutput:
     workflow_run_id: str = ""
     step_order: int = 0
     step_name: str = ""
-    output_data: bytes | None = None
+    output_data: bytes | Any = None  # bytes after checkpoint, raw output via worker path
     output_type: str | None = None
     duration_ms: int | None = None
     retry_count: int = 0
     status: StepStatus = StepStatus.COMPLETED
     error_message: str | None = None
     created_at: datetime | None = None
+
+    def __repr__(self) -> str:
+        return (
+            f"StepOutput(run={self.workflow_run_id!r}, order={self.step_order}, "
+            f"name={self.step_name!r}, status={self.status.value})"
+        )
 
 
 @dataclass
@@ -98,6 +173,12 @@ class StepResult:
     was_replayed: bool = False
     duration_ms: int = 0
     retry_count: int = 0
+
+    def __repr__(self) -> str:
+        return (
+            f"StepResult(status={self.status.value}, replayed={self.was_replayed}, "
+            f"duration={self.duration_ms}ms, retries={self.retry_count})"
+        )
 
 
 @dataclass
@@ -215,6 +296,7 @@ class WorkflowConfig:
     priority: int = 0
     namespace: str = "default"
     saga_enabled: bool = False
+    max_concurrent: int = 0
     version: int = 1
 
 
@@ -238,6 +320,7 @@ class StepDefinition:
     condition: Callable[..., bool] | None = None
     parallel_config: ParallelConfig | None = None
     signal_config: SignalConfig | None = None
+    priority: int = 0
     rate_limit: str | None = None
     input_types: dict[str, type] = field(default_factory=dict)
     output_type: type | None = None
@@ -249,6 +332,7 @@ class ParallelConfig:
     """Configuration for parallel step execution."""
 
     max_concurrency: int = 10
+    batch_checkpoint: int | None = None
 
 
 @dataclass

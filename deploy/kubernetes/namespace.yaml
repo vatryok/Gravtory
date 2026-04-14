@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gravtory
+  labels:
+    app.kubernetes.io/name: gravtory
+    app.kubernetes.io/part-of: gravtory

@@ -9,10 +9,10 @@ The Python library for crash-proof workflows, distributed execution, sagas, sche
 [![PyPI](https://img.shields.io/pypi/v/gravtory.svg)](https://pypi.org/project/gravtory/)
 [![Python](https://img.shields.io/pypi/pyversions/gravtory.svg)](https://pypi.org/project/gravtory/)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
-[![Tests](https://github.com/gravtory/gravtory/actions/workflows/ci.yml/badge.svg)](https://github.com/gravtory/gravtory/actions)
-[![Coverage](https://img.shields.io/codecov/c/github/gravtory/gravtory)](https://codecov.io/gh/gravtory/gravtory)
+[![Tests](https://github.com/vatryok/gravtory/actions/workflows/ci.yml/badge.svg)](https://github.com/vatryok/gravtory/actions)
+[![Coverage](https://img.shields.io/codecov/c/github/vatryok/gravtory)](https://codecov.io/gh/vatryok/gravtory)
 
-[Documentation](https://gravtory.dev) · [Quick Start](#quick-start) · [Examples](examples/) · [Discord](https://discord.gg/gravtory)
+[Quick Start](#quick-start) · [Examples](examples/)
 
 </div>
 
@@ -73,9 +73,9 @@ result = await grav.run(OrderWorkflow, order_id="ord_abc123")
 ### 3. It survives anything
 
 ```
-First run:     step 1 ✅ → step 2 ✅ → step 3 ✅    (completes normally)
-Crash at step 2: step 1 ✅ → step 2 💥              (process dies)
-Auto-resume:   step 1 ⏭️ → step 2 ✅ → step 3 ✅    (step 1 NOT re-executed)
+First run:     step 1 [OK] -> step 2 [OK] -> step 3 [OK]    (completes normally)
+Crash at step 2: step 1 [OK] -> step 2 [CRASH]              (process dies)
+Auto-resume:   step 1 [SKIP] -> step 2 [OK] -> step 3 [OK]    (step 1 NOT re-executed)
 ```
 
 **Step 1 (charge card) is NEVER re-executed.** Its output was atomically checkpointed to your database. On restart, Gravtory loads the checkpoint and continues from where it left off.
@@ -129,7 +129,6 @@ Auto-resume:   step 1 ⏭️ → step 2 ✅ → step 3 ✅    (step 1 NOT re-exe
 - **Type-safe** — Pydantic models for step I/O
 - **Testing framework** — in-memory, no DB needed
 - **CLI tool** — manage workflows from terminal
-- **Hot reload** — dev mode with auto-refresh
 - **Rich errors** — context + suggestions
 
 </td><td>
@@ -140,6 +139,25 @@ Auto-resume:   step 1 ⏭️ → step 2 ✅ → step 3 ✅    (step 1 NOT re-exe
 - **Token tracking** — usage and cost per workflow
 - **Model fallback** — automatic failover
 - **Agent loops** — durable tool-calling agents
+
+</td></tr>
+<tr><td>
+
+### Enterprise
+- **Audit logging** — track all workflow operations
+- **Key rotation** — rotate encryption keys safely
+- **DLQ management** — inspect, retry, purge failed work
+- **Workflow versioning** — migrate between versions
+- **Admin operations** — cancel, retry, purge workflows
+
+</td><td>
+
+### Security
+- **AES-256-GCM encryption** — checkpoint data at rest
+- **Restricted pickle** — allowlist-based unpickling
+- **CORS allowlist** — dashboard origin control
+- **Bearer auth** — dashboard API authentication
+- **Input validation** — Pydantic schema enforcement
 
 </td></tr>
 </table>
@@ -153,15 +171,15 @@ Auto-resume:   step 1 ⏭️ → step 2 ✅ → step 3 ✅    (step 1 NOT re-exe
 | Infrastructure | Redis/RMQ | Server+DB+Workers | Server | None | **None** |
 | Setup time | ~30 min | ~2 days | ~2 hours | ~10 min | **~3 min** |
 | Library vs Service | Lib+Broker | Service | Service | Library | **Library** |
-| Crash-safe | ❌ | ✅ | Partial | ✅ | **✅** |
-| Distributed workers | ✅ | ✅ | ✅ | ❌ | **✅** |
-| Saga compensation | ❌ | ✅ | ❌ | ❌ | **✅** |
-| Signals | ❌ | ✅ | ❌ | ❌ | **✅** |
-| Scheduling | ❌ | ❌ | ✅ | ✅ | **✅** |
-| Dashboard | Flower | ✅ | ✅ | ❌ | **✅** |
-| Type-safe | ❌ | ❌ | ❌ | ❌ | **✅** |
-| Testing framework | ❌ | ✅ | ❌ | ❌ | **✅** |
-| AI/LLM native | ❌ | ❌ | ❌ | ❌ | **✅** |
+| Crash-safe | [FAIL] | [PASS] | Partial | [PASS] | **[PASS]** |
+| Distributed workers | [PASS] | [PASS] | [PASS] | [FAIL] | **[PASS]** |
+| Saga compensation | [FAIL] | [PASS] | [FAIL] | [FAIL] | **[PASS]** |
+| Signals | [FAIL] | [PASS] | [FAIL] | [FAIL] | **[PASS]** |
+| Scheduling | Celery Beat | Schedules | [PASS] | [PASS] | **[PASS]** |
+| Dashboard | Flower | [PASS] | [PASS] | [FAIL] | **[PASS]** |
+| Type-safe | [FAIL] | [FAIL] | [FAIL] | [FAIL] | **[PASS]** |
+| Testing framework | [FAIL] | [PASS] | [FAIL] | [FAIL] | **[PASS]** |
+| AI/LLM native | [FAIL] | [FAIL] | [FAIL] | [FAIL] | **[PASS]** |
 | Backends | Redis/RMQ | PG/Cassandra | PG | PG only | **5 DBs** |
 | License | BSD | MIT | Apache | MIT | **AGPL** |
 
@@ -366,6 +384,8 @@ pip install gravtory[all]
 
 **Requirements**: Python 3.10+
 
+**Type checking**: Gravtory ships with a `py.typed` marker ([PEP 561](https://peps.python.org/pep-0561/)). Full type annotations work out of the box with mypy, pyright, and other type checkers — no stubs package needed.
+
 ---
 
 ## Backends
@@ -385,15 +405,20 @@ pip install gravtory[all]
 ### FastAPI
 
 ```python
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from gravtory import Gravtory
 
-app = FastAPI()
 grav = Gravtory("postgresql://localhost/mydb")
 
-@app.on_event("startup")
-async def startup():
+@asynccontextmanager
+async def lifespan(app):
     await grav.start()
+    yield
+    await grav.shutdown()
+
+app = FastAPI(lifespan=lifespan)
 
 @app.post("/orders/{order_id}")
 async def create_order(order_id: str):
@@ -401,15 +426,10 @@ async def create_order(order_id: str):
     return {"run_id": run_id}
 ```
 
-### Django
+### Django (coming soon)
 
-```python
-from gravtory.contrib.django import grav
-
-@grav.workflow(id="order-{order_id}")
-class OrderWorkflow:
-    ...
-```
+Django integration is planned for a future release. Track progress
+in [GitHub Issues](https://github.com/vatryok/gravtory/issues).
 
 ---
 
@@ -433,7 +453,7 @@ def charge_card(self, order_id):
 async def charge_card(self, order_id: str) -> dict:
     return await stripe.charge(order_id)
 
-# If this crashes: checkpoint guarantees exactly-once.
+# If this crashes: checkpoint guarantees at-least-once with idempotent replay.
 # On resume: if charge completed, it's loaded from DB. Never re-executed.
 ```
 
@@ -451,11 +471,6 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ---
 
-<div align="center">
+## Support the Project
 
-**Gravtory** — The gravity well of durable execution.
-Everything orbits the core. Nothing escapes failure.
-
-[Get Started](https://gravtory.dev/docs/quickstart) · [GitHub](https://github.com/gravtory/gravtory) · [Discord](https://discord.gg/gravtory)
-
-</div>
+Backing the ongoing development efforts is appreciated. [**Support Gravtory on Ko-Fi**](https://ko-fi.com/gravtory)

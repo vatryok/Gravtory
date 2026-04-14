@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gravtory Dashboard</title>
+<style>
+/* ── Reset & Variables ──────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root {
+  --bg-base:#f8fafc; --bg-card:#fff; --bg-sidebar:#0f172a; --bg-header:#0f172a;
+  --bg-hover:#f1f5f9; --bg-active:#e2e8f0; --bg-input:#fff; --bg-code:#f1f5f9;
+  --text:#0f172a; --text-secondary:#475569; --text-muted:#94a3b8; --text-inverse:#f8fafc;
+  --border:#e2e8f0; --border-active:#3b82f6;
+  --accent:#6366f1; --accent-hover:#4f46e5;
+  --success:#059669; --warning:#d97706; --danger:#dc2626; --info:#2563eb;
+  --radius:8px; --radius-sm:4px; --radius-lg:12px;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06);
+  --shadow-md:0 4px 6px rgba(0,0,0,.07),0 2px 4px rgba(0,0,0,.06);
+  --shadow-lg:0 10px 15px rgba(0,0,0,.1),0 4px 6px rgba(0,0,0,.05);
+  --font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;
+  --font-mono:'SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace;
+  --sidebar-w:220px; --header-h:52px;
+}
+[data-theme="dark"] {
+  --bg-base:#0f172a; --bg-card:#1e293b; --bg-hover:#334155; --bg-active:#475569;
+  --bg-input:#1e293b; --bg-code:#1e293b;
+  --text:#f1f5f9; --text-secondary:#cbd5e1; --text-muted:#64748b; --text-inverse:#0f172a;
+  --border:#334155; --border-active:#818cf8;
+  --accent:#818cf8; --accent-hover:#6366f1;
+  --shadow:0 1px 3px rgba(0,0,0,.3); --shadow-md:0 4px 6px rgba(0,0,0,.3);
+}
+html{font-size:14px} body{font-family:var(--font);background:var(--bg-base);color:var(--text);min-height:100vh}
+a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
+
+/* ── Layout ─────────────────────────────────────────────────── */
+.layout{display:flex;min-height:100vh}
+.sidebar{width:var(--sidebar-w);background:var(--bg-sidebar);color:var(--text-inverse);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:50;transition:transform .2s}
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
+.header{height:var(--header-h);background:var(--bg-header);color:var(--text-inverse);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:40}
+.content{flex:1;padding:24px;max-width:1400px;width:100%}
+.footer{padding:12px 24px;border-top:1px solid var(--border);color:var(--text-muted);font-size:.75rem;display:flex;justify-content:space-between}
+
+/* ── Sidebar ────────────────────────────────────────────────── */
+.sidebar-brand{padding:16px 20px;font-size:1.15rem;font-weight:700;letter-spacing:-.5px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sidebar-brand span{color:var(--accent);font-weight:400;font-size:.75rem;margin-left:8px}
+.sidebar-nav{padding:12px 10px;flex:1}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:var(--radius);color:rgba(255,255,255,.65);font-size:.85rem;cursor:pointer;transition:all .15s;margin-bottom:2px;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff;text-decoration:none}
+.nav-item.active{background:var(--accent);color:#fff}
+.nav-item svg{width:18px;height:18px;flex-shrink:0;opacity:.7}
+.nav-item.active svg{opacity:1}
+
+/* ── Header ─────────────────────────────────────────────────── */
+.header-left{display:flex;align-items:center;gap:16px}
+.header-right{display:flex;align-items:center;gap:16px}
+.health-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.health-dot.ok{background:#22c55e} .health-dot.warn{background:#eab308} .health-dot.err{background:#ef4444} .health-dot.unknown{background:#6b7280}
+.header-stat{font-size:.8rem;color:rgba(255,255,255,.6)}
+.header-stat b{color:rgba(255,255,255,.9)}
+.ns-select{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;padding:4px 8px;border-radius:var(--radius-sm);font-size:.75rem;cursor:pointer;max-width:140px}
+.ns-select option{background:var(--bg);color:var(--text)}
+.theme-toggle{background:none;border:1px solid rgba(255,255,255,.2);color:#fff;padding:4px 10px;border-radius:var(--radius-sm);cursor:pointer;font-size:.75rem}
+.theme-toggle:hover{border-color:rgba(255,255,255,.5)}
+
+/* ── Cards ──────────────────────────────────────────────────── */
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow)}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow)}
+.stat-card .label{font-size:.8rem;color:var(--text-muted);margin-bottom:4px}
+.stat-card .value{font-size:1.75rem;font-weight:700}
+.stat-card .value.success{color:var(--success)} .stat-card .value.danger{color:var(--danger)}
+.stat-card .value.info{color:var(--info)} .stat-card .value.warning{color:var(--warning)}
+.stat-card .value.accent{color:var(--accent)}
+
+/* ── Badges ─────────────────────────────────────────────────── */
+.badge{display:inline-flex;align-items:center;padding:2px 10px;border-radius:100px;font-size:.75rem;font-weight:600;letter-spacing:.3px;text-transform:uppercase}
+.badge-completed{background:#dcfce7;color:#166534} .badge-failed{background:#fee2e2;color:#991b1b}
+.badge-running{background:#dbeafe;color:#1e40af} .badge-pending{background:#fef3c7;color:#92400e}
+.badge-cancelled{background:#f3f4f6;color:#374151} .badge-compensating{background:#fce7f3;color:#9d174d}
+.badge-compensated{background:#ede9fe;color:#5b21b6} .badge-compensation_failed{background:#fee2e2;color:#991b1b}
+[data-theme="dark"] .badge-completed{background:#064e3b;color:#6ee7b7} [data-theme="dark"] .badge-failed{background:#7f1d1d;color:#fca5a5}
+[data-theme="dark"] .badge-running{background:#1e3a5f;color:#93c5fd} [data-theme="dark"] .badge-pending{background:#78350f;color:#fcd34d}
+[data-theme="dark"] .badge-cancelled{background:#374151;color:#9ca3af}
+
+/* ── Tables ─────────────────────────────────────────────────── */
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+thead{background:var(--bg-hover)} thead th{padding:10px 14px;text-align:left;font-weight:600;color:var(--text-secondary);border-bottom:2px solid var(--border);white-space:nowrap;cursor:default;user-select:none}
+tbody tr{border-top:1px solid var(--border);transition:background .1s} tbody tr:hover{background:var(--bg-hover)}
+tbody td{padding:10px 14px;vertical-align:middle}
+.clickable-row{cursor:pointer}
+.mono{font-family:var(--font-mono);font-size:.78rem}
+.truncate{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.text-muted{color:var(--text-muted)} .text-danger{color:var(--danger)} .text-success{color:var(--success)}
+
+/* ── Buttons ────────────────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:var(--radius);font-size:.8rem;font-weight:500;cursor:pointer;border:1px solid transparent;transition:all .15s}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)} .btn-primary:hover{background:var(--accent-hover)}
+.btn-danger{background:var(--danger);color:#fff;border-color:var(--danger)} .btn-danger:hover{opacity:.9}
+.btn-ghost{background:transparent;color:var(--accent);border-color:var(--border)} .btn-ghost:hover{background:var(--bg-hover)}
+.btn-sm{padding:4px 10px;font-size:.75rem}
+
+/* ── Inputs ─────────────────────────────────────────────────── */
+select,input[type="text"],textarea{background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:7px 12px;font-size:.85rem;color:var(--text);font-family:var(--font);outline:none;transition:border-color .15s}
+select:focus,input[type="text"]:focus,textarea:focus{border-color:var(--border-active);box-shadow:0 0 0 3px rgba(99,102,241,.15)}
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+
+/* ── Timeline ───────────────────────────────────────────────── */
+.timeline{display:flex;gap:3px;margin:16px 0;height:28px;border-radius:var(--radius-sm);overflow:hidden}
+.timeline-bar{height:100%;min-width:6px;border-radius:var(--radius-sm);position:relative;transition:width .3s}
+.timeline-bar:hover{opacity:.85}
+.timeline-bar.success{background:var(--success)} .timeline-bar.danger{background:var(--danger)}
+.timeline-bar.info{background:var(--info)} .timeline-bar.muted{background:var(--text-muted)}
+
+/* ── Code/Error ─────────────────────────────────────────────── */
+.code-block{background:var(--bg-code);border:1px solid var(--border);border-radius:var(--radius);padding:14px;font-family:var(--font-mono);font-size:.78rem;white-space:pre-wrap;word-break:break-all;max-height:300px;overflow:auto;line-height:1.6}
+
+/* ── Toast ──────────────────────────────────────────────────── */
+.toast-container{position:fixed;top:60px;right:20px;z-index:1000;display:flex;flex-direction:column;gap:8px}
+.toast{padding:12px 20px;border-radius:var(--radius);font-size:.85rem;color:#fff;box-shadow:var(--shadow-lg);animation:toastIn .25s ease;min-width:250px}
+.toast-success{background:#059669} .toast-error{background:#dc2626} .toast-info{background:#2563eb}
+@keyframes toastIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+
+/* ── Modal ──────────────────────────────────────────────────── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:center;justify-content:center;animation:fadeIn .15s}
+.modal{background:var(--bg-card);border-radius:var(--radius-lg);padding:24px;max-width:440px;width:90%;box-shadow:var(--shadow-lg)}
+.modal h3{font-size:1.1rem;margin-bottom:12px} .modal p{color:var(--text-secondary);margin-bottom:20px;font-size:.9rem}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* ── Skeleton ───────────────────────────────────────────────── */
+.skeleton{background:linear-gradient(90deg,var(--bg-hover) 25%,var(--bg-active) 50%,var(--bg-hover) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:var(--radius-sm);height:14px}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* ── Empty State ────────────────────────────────────────────── */
+.empty{text-align:center;padding:60px 20px;color:var(--text-muted)}
+.empty-icon{font-size:3rem;margin-bottom:12px;opacity:.4}
+.empty p{font-size:.9rem}
+
+/* ── Page Title ─────────────────────────────────────────────── */
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+.page-title{font-size:1.25rem;font-weight:700}
+.breadcrumb{font-size:.8rem;color:var(--text-muted);margin-bottom:4px}
+.breadcrumb a{color:var(--accent)}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)} .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0} .stat-grid{grid-template-columns:repeat(2,1fr)}
+  .header-stat{display:none} .content{padding:16px}
+  .burger{display:flex !important}
+  .ns-select{max-width:100px;font-size:.7rem}
+  /* Card layout for tables on small screens */
+  .table-wrap table thead{display:none}
+  .table-wrap table,
+  .table-wrap table tbody,
+  .table-wrap table tr,
+  .table-wrap table td{display:block;width:100%}
+  .table-wrap table tr{padding:12px;border-bottom:1px solid var(--border);position:relative}
+  .table-wrap table td{padding:4px 0;border:none;font-size:.82rem}
+  .table-wrap table td::before{content:attr(data-label);display:inline-block;width:90px;font-weight:600;color:var(--text-secondary);font-size:.75rem}
+  .table-wrap table td:first-child{font-weight:600}
+  .filter-bar{flex-direction:column;gap:8px}
+  .filter-bar select,.filter-bar input{width:100%}
+}
+.burger{display:none;background:none;border:none;color:#fff;cursor:pointer;padding:4px}
+.burger svg{width:24px;height:24px}
+
+/* ── Accessibility ──────────────────────────────────────────── */
+.skip-link{position:absolute;top:-40px;left:0;background:var(--accent);color:#fff;padding:8px 16px;z-index:1000;font-size:.9rem;border-radius:0 0 var(--radius) 0;transition:top .2s}
+.skip-link:focus{top:0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:var(--radius-sm)}
+.nav-item:focus-visible{background:rgba(255,255,255,.15);color:#fff}
+.btn:focus-visible{box-shadow:0 0 0 3px rgba(99,102,241,.4)}
+[role="alert"]{font-weight:500}
+</style>
+</head>
+<body>
+<a href="#content" class="skip-link">Skip to main content</a>
+<div class="layout">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
+    <div class="sidebar-brand" aria-hidden="true">Gravtory <span>Dashboard</span></div>
+    <nav class="sidebar-nav" id="nav" aria-label="Dashboard sections"></nav>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <header class="header" role="banner">
+      <div class="header-left">
+        <button class="burger" onclick="document.getElementById('sidebar').classList.toggle('open')" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 12h18M3 6h18M3 18h18"/></svg></button>
+        <span id="health-badge" role="status" aria-live="polite"><span class="health-dot unknown" aria-hidden="true"></span> <span class="header-stat">Connecting...</span></span>
+      </div>
+      <div class="header-right">
+        <select id="ns-select" class="ns-select" onchange="setNamespace(this.value)" aria-label="Select namespace" title="Namespace">
+          <option value="default">default</option>
+        </select>
+        <span class="header-stat" id="hdr-workers" aria-label="Active workers"></span>
+        <span class="header-stat" id="hdr-dlq" aria-label="DLQ entries"></span>
+        <span class="header-stat" id="hdr-uptime" aria-label="Uptime"></span>
+        <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark and light theme">Theme</button>
+      </div>
+    </header>
+    <main class="content" id="content" role="main" aria-label="Dashboard content"></main>
+    <footer class="footer" role="contentinfo">
+      <span>Gravtory v1.0.0</span>
+      <span id="footer-refresh"></span>
+    </footer>
+  </div>
+</div>
+<div class="toast-container" id="toasts" role="alert" aria-live="assertive"></div>
+<div id="modal-root" role="dialog" aria-modal="true" aria-hidden="true"></div>
+
+<script>
+/* ── Config ─────────────────────────────────────────────────── */
+const API = window.location.origin + '/api';
+let AUTH_TOKEN = sessionStorage.getItem('grav-token')||'';
+let NAMESPACE = sessionStorage.getItem('grav-ns')||'default';
+const POLL_INTERVAL = 10000;
+
+function setNamespace(ns){
+  NAMESPACE=ns;sessionStorage.setItem('grav-ns',ns);route();refreshHeader();
+}
+
+/* ── Utilities ──────────────────────────────────────────────── */
+function esc(s){if(s==null)return'';const d=document.createElement('div');d.appendChild(document.createTextNode(String(s)));return d.innerHTML}
+function fmtDate(d){if(!d||d==='None')return'\u2014';try{return new Date(d).toLocaleString()}catch{return String(d)}}
+function fmtDuration(ms){if(ms==null)return'\u2014';if(ms<1000)return ms+'ms';return(ms/1000).toFixed(1)+'s'}
+function badge(status){return`<span class="badge badge-${(status||'pending').replace(/ /g,'_')}">${esc(status)}</span>`}
+
+/* ── API Client ─────────────────────────────────────────────── */
+async function api(path,opts={}){
+  const h={...(opts.headers||{})};
+  if(AUTH_TOKEN)h['Authorization']='Bearer '+AUTH_TOKEN;
+  if(opts.body&&typeof opts.body==='object'){h['Content-Type']='application/json';opts.body=JSON.stringify(opts.body)}
+  try{
+    const r=await fetch(API+path,{...opts,headers:h});
+    if(r.status===401){promptToken();return null}
+    if(!r.ok)throw new Error(`HTTP ${r.status}`);
+    return await r.json();
+  }catch(e){console.error('API error:',path,e);return null}
+}
+function promptToken(){
+  const root=document.getElementById('modal-root');
+  root.innerHTML='<div class="modal-overlay"><div class="modal" onclick="event.stopPropagation()"><h3>Authentication Required</h3><p>Enter your dashboard token to continue.</p><input id="token-input" type="password" placeholder="GRAVTORY_DASHBOARD_TOKEN" style="width:100%;padding:8px;margin:12px 0;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text)"/><div class="modal-actions"><button class="btn btn-primary" id="token-submit">Connect</button></div></div></div>';
+  root.querySelector('#token-submit').onclick=()=>{const v=root.querySelector('#token-input').value.trim();if(v){AUTH_TOKEN=v;sessionStorage.setItem('grav-token',v);root.innerHTML='';route()}else{toast('Token cannot be empty','error')}};
+  root.querySelector('#token-input').addEventListener('keydown',e=>{if(e.key==='Enter')root.querySelector('#token-submit').click()});
+}
+
+/* ── Toast ──────────────────────────────────────────────────── */
+function toast(msg,type='info'){
+  const el=document.createElement('div');el.className='toast toast-'+type;el.textContent=msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';el.style.transition='opacity .3s';setTimeout(()=>el.remove(),300)},3500);
+}
+
+/* ── Modal ──────────────────────────────────────────────────── */
+function confirmDialog(title,msg){
+  return new Promise(resolve=>{
+    const root=document.getElementById('modal-root');
+    root.innerHTML=`<div class="modal-overlay" onclick="this.remove()"><div class="modal" onclick="event.stopPropagation()"><h3>${esc(title)}</h3><p>${esc(msg)}</p><div class="modal-actions"><button class="btn btn-ghost" id="modal-cancel">Cancel</button><button class="btn btn-danger" id="modal-ok">Confirm</button></div></div></div>`;
+    root.querySelector('#modal-cancel').onclick=()=>{root.innerHTML='';resolve(false)};
+    root.querySelector('#modal-ok').onclick=()=>{root.innerHTML='';resolve(true)};
+  });
+}
+
+/* ── Theme ──────────────────────────────────────────────────── */
+function toggleTheme(){
+  const t=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',t);localStorage.setItem('grav-theme',t);
+}
+(function(){const t=localStorage.getItem('grav-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t)})();
+
+/* ── Router ─────────────────────────────────────────────────── */
+const PAGES=[
+  {id:'overview',label:'Overview',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>'},
+  {id:'workflows',label:'Workflows',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>'},
+  {id:'dlq',label:'Dead Letter Queue',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>'},
+  {id:'workers',label:'Workers',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><circle cx="6" cy="6" r="1"/><circle cx="6" cy="18" r="1"/></svg>'},
+  {id:'schedules',label:'Schedules',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'},
+  {id:'stats',label:'Statistics',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>'},
+  {id:'audit',label:'Audit Log',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>'},
+];
+
+function buildNav(){
+  const nav=document.getElementById('nav');
+  nav.innerHTML=PAGES.map(p=>`<button class="nav-item" data-page="${p.id}" onclick="go('${p.id}')">${p.icon}<span>${p.label}</span></button>`).join('');
+}
+
+function currentPage(){return(location.hash.slice(1)||'overview').split('/')[0]}
+function go(page){location.hash=page;route()}
+async function route(){
+  const hash=location.hash.slice(1)||'overview';
+  const page=hash.split('/')[0];
+  document.querySelectorAll('.nav-item').forEach(el=>{el.classList.toggle('active',el.dataset.page===page)});
+  document.getElementById('sidebar').classList.remove('open');
+  const c=document.getElementById('content');
+  try{
+    if(hash.startsWith('workflow/'))return await renderWorkflowDetail(hash.split('/').slice(1).join('/'),c);
+    switch(page){
+      case'overview':return await renderOverview(c);
+      case'workflows':return await renderWorkflows(c);
+      case'dlq':return await renderDLQ(c);
+      case'workers':return await renderWorkers(c);
+      case'schedules':return await renderSchedules(c);
+      case'stats':return await renderStats(c);
+      case'audit':return await renderAudit(c);
+      default:return await renderOverview(c);
+    }
+  }catch(err){
+    console.error('Render error:',err);
+    c.innerHTML='<div class="empty"><p>Something went wrong. <button class="btn btn-ghost btn-sm" onclick="route()">Retry</button></p><pre class="code-block" style="margin-top:8px;font-size:.8rem">'+esc(String(err))+'</pre></div>';
+  }
+}
+
+/* ── Overview ───────────────────────────────────────────────── */
+async function renderOverview(el){
+  el.innerHTML='<div class="page-header"><h1 class="page-title">Overview</h1></div><div class="stat-grid" id="ov-stats"></div><div class="card" id="ov-recent"><div class="skeleton" style="height:200px"></div></div>';
+  const s=await api('/stats');
+  if(!s){el.innerHTML='<div class="empty"><div class="empty-icon">!</div><p>Could not connect to backend.</p></div>';return}
+  document.getElementById('ov-stats').innerHTML=[
+    {l:'Total Workflows',v:s.total_workflows,c:'accent'},{l:'Running',v:s.running,c:'info'},
+    {l:'Completed',v:s.completed,c:'success'},{l:'Failed',v:s.failed,c:'danger'},
+    {l:'DLQ Size',v:s.dlq_size,c:s.dlq_size>0?'danger':'success'},{l:'Active Workers',v:s.active_workers,c:'info'},
+    {l:'Schedules',v:s.schedules,c:'accent'},
+  ].map(c=>`<div class="stat-card"><div class="label">${c.l}</div><div class="value ${c.c}">${c.v}</div></div>`).join('');
+  const wf=await api('/workflows?limit=8');
+  if(wf&&wf.workflows.length>0){
+    document.getElementById('ov-recent').innerHTML='<h3 style="font-weight:600;margin-bottom:12px">Recent Workflow Runs</h3>'+workflowTable(wf.workflows);
+  }else{document.getElementById('ov-recent').innerHTML='<div class="empty"><p>No workflow runs yet.</p></div>'}
+}
+
+/* ── Workflows List ─────────────────────────────────────────── */
+let wfState={status:'',search:'',offset:0,limit:50};
+let _wfDebounce=null;
+function wfSearchInput(val){clearTimeout(_wfDebounce);_wfDebounce=setTimeout(()=>{wfState.search=val;wfState.offset=0;renderWorkflows(document.getElementById('content'))},300)}
+
+async function renderWorkflows(el){
+  el.innerHTML=`<div class="page-header"><h1 class="page-title">Workflow Runs</h1></div>
+    <div class="filter-bar">
+      <select onchange="wfState.status=this.value;wfState.offset=0;renderWorkflows(document.getElementById('content'))">
+        <option value="">All Statuses</option>
+        ${['pending','running','completed','failed','cancelled','compensating','compensated'].map(s=>`<option value="${s}" ${wfState.status===s?'selected':''}>${s}</option>`).join('')}
+      </select>
+      <input type="text" placeholder="Search by name or run ID..." value="${esc(wfState.search)}" oninput="wfSearchInput(this.value)" style="flex:1;min-width:200px">
+    </div>
+    <div id="wf-body"><div class="skeleton" style="height:300px"></div></div>
+    <div id="wf-pag" style="margin-top:12px;display:flex;gap:8px;align-items:center"></div>`;
+  let q='?limit='+wfState.limit+'&offset='+wfState.offset;
+  if(wfState.status)q+='&status='+wfState.status;
+  if(wfState.search)q+='&workflow_name='+encodeURIComponent(wfState.search);
+  const d=await api('/workflows'+q);
+  if(!d){document.getElementById('wf-body').innerHTML='<div class="empty"><p>Failed to load workflows.</p></div>';return}
+  let rows=d.workflows;
+  if(wfState.search){const s=wfState.search.toLowerCase();rows=rows.filter(r=>r.workflow_name.toLowerCase().includes(s)||r.id.toLowerCase().includes(s))}
+  if(rows.length===0){document.getElementById('wf-body').innerHTML='<div class="empty"><div class="empty-icon">O</div><p>No workflow runs match your filters.</p></div>';return}
+  document.getElementById('wf-body').innerHTML=workflowTable(rows);
+  let pg='';
+  if(wfState.offset>0)pg+=`<button class="btn btn-ghost btn-sm" onclick="wfState.offset-=wfState.limit;renderWorkflows(document.getElementById('content'))">Previous</button>`;
+  pg+=`<span class="text-muted" style="font-size:.8rem">Showing ${wfState.offset+1}-${wfState.offset+rows.length}${d.total?' of '+d.total:''}</span>`;
+  if(d.workflows.length>=wfState.limit)pg+=`<button class="btn btn-ghost btn-sm" onclick="wfState.offset+=wfState.limit;renderWorkflows(document.getElementById('content'))">Next</button>`;
+  document.getElementById('wf-pag').innerHTML=pg;
+}
+
+function workflowTable(rows){
+  return`<div class="table-wrap"><table><thead><tr><th>Run ID</th><th>Workflow</th><th>Status</th><th>Step</th><th>Created</th></tr></thead><tbody>${rows.map(r=>`<tr class="clickable-row" onclick="go('workflow/${esc(r.id)}')"><td class="mono">${esc(r.id)}</td><td>${esc(r.workflow_name)}</td><td>${badge(r.status)}</td><td>${esc(r.current_step??'\u2014')}</td><td class="text-muted">${fmtDate(r.created_at)}</td></tr>`).join('')}</tbody></table></div>`;
+}
+
+/* ── Workflow Detail ────────────────────────────────────────── */
+async function renderWorkflowDetail(id,el){
+  el.innerHTML='<div class="skeleton" style="height:400px"></div>';
+  const d=await api('/workflows/'+encodeURIComponent(id));
+  if(!d||d.error){el.innerHTML=`<div class="empty"><p>${esc(d?.error||'Workflow not found')}</p></div>`;return}
+  let actions='';
+  if(d.status==='failed')actions+=`<button class="btn btn-primary btn-sm action-btn" data-action="retry" data-run-id="${esc(id)}">Retry</button>`;
+  if(d.status==='running'||d.status==='pending')actions+=`<button class="btn btn-danger btn-sm action-btn" data-action="cancel" data-run-id="${esc(id)}">Cancel</button>`;
+  actions+=`<button class="btn btn-ghost btn-sm action-btn" data-action="signal" data-run-id="${esc(id)}">Send Signal</button>`;
+
+  let timeline='',stepsHtml='';
+  if(d.steps&&d.steps.length>0){
+    const maxD=Math.max(...d.steps.map(s=>s.duration_ms||1),1);
+    timeline='<div class="timeline">'+d.steps.map(s=>{
+      const w=Math.max(((s.duration_ms||1)/maxD)*100,3);
+      const cls=s.status==='completed'?'success':s.status==='failed'?'danger':'muted';
+      return`<div class="timeline-bar ${cls}" style="width:${w}%" title="${esc(s.step_name)}: ${fmtDuration(s.duration_ms)}"></div>`;
+    }).join('')+'</div>';
+    stepsHtml=`<div class="table-wrap"><table><thead><tr><th>#</th><th>Name</th><th>Status</th><th>Duration</th><th>Retries</th><th>Output</th></tr></thead><tbody>${d.steps.map(s=>{const out=s.output_data!=null?esc(typeof s.output_data==='string'?s.output_data:JSON.stringify(s.output_data,null,2)):'';return`<tr><td>${esc(s.step_order)}</td><td>${esc(s.step_name)}</td><td>${badge(s.status)}</td><td>${fmtDuration(s.duration_ms)}</td><td>${s.retry_count}</td><td>${out?`<details><summary style="cursor:pointer;font-size:.8rem">Show</summary><pre class="code-block" style="margin-top:4px;max-height:200px;overflow:auto;font-size:.75rem">${out}</pre></details>`:'\u2014'}</td></tr>`}).join('')}</tbody></table></div>`;
+  }
+
+  el.innerHTML=`
+    <div class="breadcrumb"><a href="#workflows" onclick="go('workflows');return false">Workflows</a> / ${esc(d.workflow_name)}</div>
+    <div class="page-header"><h1 class="page-title">${esc(d.workflow_name)}</h1><div style="display:flex;gap:8px">${actions}</div></div>
+    <div class="card" style="margin-bottom:20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+        <div><span class="mono text-muted">${esc(d.id)}</span></div>
+        <div>${badge(d.status)}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:16px;font-size:.85rem">
+        <div><b>Created:</b> ${fmtDate(d.created_at)}</div>
+        <div><b>Updated:</b> ${fmtDate(d.updated_at)}</div>
+        <div><b>Completed:</b> ${fmtDate(d.completed_at)}</div>
+      </div>
+      ${d.error_message?`<div class="code-block text-danger" style="margin-top:16px">${esc(d.error_message)}</div>`:''}
+      ${d.error_traceback?`<details style="margin-top:8px"><summary style="cursor:pointer;font-size:.8rem;color:var(--text-muted)">Show traceback</summary><div class="code-block" style="margin-top:8px">${esc(d.error_traceback)}</div></details>`:''}
+    </div>
+    ${timeline?'<h3 style="font-weight:600;margin-bottom:8px">Step Timeline</h3>'+timeline:''}
+    ${stepsHtml?'<h3 style="font-weight:600;margin:16px 0 8px">Steps</h3>'+stepsHtml:'<div class="empty"><p>No steps recorded yet.</p></div>'}`;
+}
+
+/* D-005: event delegation for action buttons (avoids inline onclick XSS) */
+document.addEventListener('click',async e=>{
+  const btn=e.target.closest('.action-btn');if(!btn)return;
+  const action=btn.dataset.action,rid=btn.dataset.runId;if(!rid)return;
+  if(action==='retry')await doRetry(rid,btn);
+  else if(action==='cancel')await doCancel(rid,btn);
+  else if(action==='signal')await promptSignal(rid);
+});
+
+async function doRetry(id,btn){
+  if(!await confirmDialog('Retry Workflow','Are you sure you want to retry this workflow? Steps with side effects may re-execute.'))return;
+  if(btn){btn.disabled=true;btn.textContent='Retrying...';}
+  await api('/workflows/'+id+'/retry',{method:'POST'});toast('Workflow queued for retry','success');
+  renderWorkflowDetail(id,document.getElementById('content'));
+}
+async function doCancel(id,btn){
+  if(!await confirmDialog('Cancel Workflow','Are you sure you want to cancel this workflow run?'))return;
+  if(btn){btn.disabled=true;btn.textContent='Cancelling...';}
+  await api('/workflows/'+id+'/cancel',{method:'POST'});toast('Workflow cancelled','info');
+  renderWorkflowDetail(id,document.getElementById('content'));
+}
+function promptSignal(id){
+  const root=document.getElementById('modal-root');
+  root.innerHTML=`<div class="modal-overlay" onclick="this.parentElement.innerHTML=''">
+    <div class="modal" onclick="event.stopPropagation()" style="min-width:360px">
+      <h3>Send Signal</h3>
+      <label style="display:block;margin:12px 0 4px;font-size:.85rem;font-weight:600">Signal Name</label>
+      <input id="sig-name" type="text" placeholder="e.g. approval" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text)"/>
+      <label style="display:block;margin:12px 0 4px;font-size:.85rem;font-weight:600">Data (JSON)</label>
+      <textarea id="sig-data" rows="4" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-family:monospace;resize:vertical">{}</textarea>
+      <div id="sig-err" style="color:var(--danger);font-size:.8rem;min-height:1.2em;margin-top:4px"></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="sig-cancel">Cancel</button>
+        <button class="btn btn-primary" id="sig-send">Send</button>
+      </div>
+    </div>
+  </div>`;
+  const nameEl=root.querySelector('#sig-name'),dataEl=root.querySelector('#sig-data'),errEl=root.querySelector('#sig-err');
+  root.querySelector('#sig-cancel').onclick=()=>{root.innerHTML=''};
+  root.querySelector('#sig-send').onclick=async()=>{
+    const name=nameEl.value.trim();
+    if(!name){errEl.textContent='Signal name is required.';return}
+    let parsed;
+    try{parsed=JSON.parse(dataEl.value)}catch{errEl.textContent='Invalid JSON.';return}
+    root.querySelector('#sig-send').disabled=true;
+    root.querySelector('#sig-send').textContent='Sending...';
+    await api('/workflows/'+id+'/signals/'+encodeURIComponent(name),{method:'POST',body:{data:parsed}});
+    root.innerHTML='';
+    toast('Signal "'+name+'" sent','success');
+  };
+  nameEl.focus();
+}
+
+/* ── DLQ ────────────────────────────────────────────────────── */
+async function renderDLQ(el){
+  el.innerHTML='<div class="page-header"><h1 class="page-title">Dead Letter Queue</h1><button class="btn btn-danger btn-sm" onclick="doPurgeDLQ()">Purge All</button></div><div id="dlq-body"><div class="skeleton" style="height:200px"></div></div>';
+  const d=await api('/dlq');
+  if(!d){document.getElementById('dlq-body').innerHTML='<div class="empty"><p>Failed to load DLQ.</p></div>';return}
+  if(d.entries.length===0){document.getElementById('dlq-body').innerHTML='<div class="empty"><div class="empty-icon">O</div><p>Dead letter queue is empty.</p></div>';return}
+  document.getElementById('dlq-body').innerHTML=`<div class="table-wrap"><table><thead><tr><th>Run ID</th><th>Step</th><th>Error</th><th>Retries</th><th>Created</th><th>Action</th></tr></thead><tbody>${d.entries.map(e=>`<tr><td class="mono">${esc(e.workflow_run_id)}</td><td>${esc(e.step_order)}</td><td class="truncate text-danger" title="${esc(e.error_message)}">${esc(e.error_message)||'\u2014'}</td><td>${esc(e.retry_count)}</td><td class="text-muted">${fmtDate(e.created_at)}</td><td><button class="btn btn-ghost btn-sm" onclick="doRetryDLQ(${e.id})">Retry</button></td></tr>`).join('')}</tbody></table></div>`;
+}
+async function doRetryDLQ(id){await api('/dlq/'+id+'/retry',{method:'POST'});toast('DLQ entry retried','success');renderDLQ(document.getElementById('content'))}
+async function doPurgeDLQ(){if(!await confirmDialog('Purge DLQ','Delete all entries from the dead letter queue?'))return;await api('/dlq',{method:'DELETE'});toast('DLQ purged','info');renderDLQ(document.getElementById('content'))}
+
+/* ── Workers ────────────────────────────────────────────────── */
+async function renderWorkers(el){
+  el.innerHTML='<div class="page-header"><h1 class="page-title">Workers</h1></div><div id="wrk-body"><div class="skeleton" style="height:200px"></div></div>';
+  const d=await api('/workers');
+  if(!d){document.getElementById('wrk-body').innerHTML='<div class="empty"><p>Failed to load workers.</p></div>';return}
+  if(d.workers.length===0){document.getElementById('wrk-body').innerHTML='<div class="empty"><div class="empty-icon">O</div><p>No workers registered.</p></div>';return}
+  document.getElementById('wrk-body').innerHTML=`<div class="table-wrap"><table><thead><tr><th>Worker ID</th><th>Node</th><th>Status</th><th>Last Heartbeat</th><th>Current Task</th></tr></thead><tbody>${d.workers.map(w=>{
+    const age=w.last_heartbeat?(Date.now()-new Date(w.last_heartbeat).getTime())/1000:999;
+    const dot=age<30?'ok':age<120?'warn':'err';
+    return`<tr><td class="mono">${esc(w.worker_id)}</td><td>${esc(w.node_id)}</td><td><span class="health-dot ${dot}"></span> ${esc(w.status)}</td><td class="text-muted">${fmtDate(w.last_heartbeat)}</td><td>${esc(w.current_task)||'\u2014'}</td></tr>`}).join('')}</tbody></table></div>`;
+}
+
+/* ── Schedules ──────────────────────────────────────────────── */
+async function renderSchedules(el){
+  el.innerHTML='<div class="page-header"><h1 class="page-title">Schedules</h1></div><div id="sch-body"><div class="skeleton" style="height:200px"></div></div>';
+  const d=await api('/schedules');
+  if(!d){document.getElementById('sch-body').innerHTML='<div class="empty"><p>Failed to load schedules.</p></div>';return}
+  if(d.schedules.length===0){document.getElementById('sch-body').innerHTML='<div class="empty"><div class="empty-icon">O</div><p>No schedules configured.</p></div>';return}
+  document.getElementById('sch-body').innerHTML=`<div class="table-wrap"><table><thead><tr><th>Workflow</th><th>Type</th><th>Config</th><th>Last Run</th><th>Next Run</th><th>Enabled</th></tr></thead><tbody>${d.schedules.map(s=>`<tr><td>${esc(s.workflow_name)}</td><td>${esc(s.schedule_type)}</td><td class="mono">${esc(s.schedule_config)}</td><td class="text-muted">${fmtDate(s.last_run_at)}</td><td class="text-muted">${fmtDate(s.next_run_at)}</td><td><button class="btn btn-sm ${s.enabled?'btn-primary':'btn-ghost'}" onclick="doToggleSched('${esc(s.id)}')">${s.enabled?'On':'Off'}</button></td></tr>`).join('')}</tbody></table></div>`;
+}
+async function doToggleSched(id){await api('/schedules/'+id+'/toggle',{method:'POST'});toast('Schedule toggled','info');renderSchedules(document.getElementById('content'))}
+
+/* ── Statistics ─────────────────────────────────────────────── */
+async function renderStats(el){
+  el.innerHTML='<div class="page-header"><h1 class="page-title">Statistics</h1></div><div id="st-body"><div class="skeleton" style="height:300px"></div></div>';
+  const s=await api('/stats');const h=await api('/health');
+  if(!s){document.getElementById('st-body').innerHTML='<div class="empty"><p>Failed to load statistics.</p></div>';return}
+  const total=s.total_workflows||1;
+  const pct=v=>Math.max((v/total)*100,v>0?2:0).toFixed(1);
+  document.getElementById('st-body').innerHTML=`
+    <div class="stat-grid">
+      ${[{l:'Total Workflows',v:s.total_workflows,c:'accent'},{l:'Running',v:s.running,c:'info'},{l:'Completed',v:s.completed,c:'success'},{l:'Failed',v:s.failed,c:'danger'},{l:'DLQ Size',v:s.dlq_size,c:s.dlq_size>0?'danger':'success'},{l:'Active Workers',v:s.active_workers,c:'info'},{l:'Schedules',v:s.schedules,c:'accent'}].map(c=>`<div class="stat-card"><div class="label">${c.l}</div><div class="value ${c.c}">${c.v}</div></div>`).join('')}
+    </div>
+    <div class="card" style="margin-bottom:20px">
+      <h3 style="font-weight:600;margin-bottom:12px">Status Distribution</h3>
+      <div style="display:flex;height:32px;border-radius:var(--radius);overflow:hidden;gap:2px">
+        <div style="width:${pct(s.completed)}%;background:var(--success)" title="Completed: ${s.completed}"></div>
+        <div style="width:${pct(s.running)}%;background:var(--info)" title="Running: ${s.running}"></div>
+        <div style="width:${pct(s.failed)}%;background:var(--danger)" title="Failed: ${s.failed}"></div>
+        <div style="width:${pct(total-s.completed-s.running-s.failed)}%;background:var(--text-muted)" title="Other: ${total-s.completed-s.running-s.failed}"></div>
+      </div>
+      <div style="display:flex;gap:16px;margin-top:8px;font-size:.8rem;color:var(--text-secondary)">
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:var(--success)"></span>Completed</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:var(--info)"></span>Running</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:var(--danger)"></span>Failed</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:var(--text-muted)"></span>Other</span>
+      </div>
+    </div>
+    ${h?`<div class="card"><h3 style="font-weight:600;margin-bottom:12px">System Health</h3><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;font-size:.85rem"><div><b>Status:</b> <span class="health-dot ${h.status==='healthy'?'ok':'err'}"></span> ${esc(h.status)}</div><div><b>Backend:</b> ${esc(h.backend)}</div><div><b>Uptime:</b> ${Math.floor(h.uptime_seconds/3600)}h ${Math.floor((h.uptime_seconds%3600)/60)}m</div></div></div>`:''}`;
+}
+
+/* ── Audit Log ──────────────────────────────────────────────── */
+let auditState={action:'',limit:100};
+
+async function renderAudit(el){
+  const actions=['workflow.created','workflow.completed','workflow.failed','workflow.retried','workflow.cancelled','step.completed','step.failed','signal.sent','schedule.toggled','dlq.retried','dlq.purged','config.changed'];
+  el.innerHTML=`<div class="page-header"><h1 class="page-title">Audit Log</h1></div>
+    <div class="filter-bar">
+      <select onchange="auditState.action=this.value;renderAudit(document.getElementById('content'))">
+        <option value="">All Actions</option>
+        ${actions.map(a=>`<option value="${a}" ${auditState.action===a?'selected':''}>${a}</option>`).join('')}
+      </select>
+    </div>
+    <div id="audit-body"><div class="skeleton" style="height:300px"></div></div>`;
+  let q='?limit='+auditState.limit;
+  if(auditState.action)q+='&action='+encodeURIComponent(auditState.action);
+  const d=await api('/audit'+q);
+  if(!d){document.getElementById('audit-body').innerHTML='<div class="empty"><p>Failed to load audit log.</p></div>';return}
+  if(d.message){document.getElementById('audit-body').innerHTML='<div class="empty"><p>'+esc(d.message)+'</p></div>';return}
+  if(d.entries.length===0){document.getElementById('audit-body').innerHTML='<div class="empty"><div class="empty-icon">O</div><p>No audit log entries.</p></div>';return}
+  document.getElementById('audit-body').innerHTML=`<div class="table-wrap"><table><thead><tr><th>Timestamp</th><th>Actor</th><th>Action</th><th>Resource</th><th>Details</th></tr></thead><tbody>${d.entries.map(e=>{
+    const details=e.details&&Object.keys(e.details).length>0?esc(JSON.stringify(e.details)):'';
+    return`<tr><td class="text-muted" style="white-space:nowrap">${fmtDate(e.timestamp)}</td><td class="mono">${esc(e.actor)}</td><td>${badge(e.action)}</td><td class="mono">${esc(e.resource_type)}/${esc(e.resource_id)}</td><td>${details?`<details><summary style="cursor:pointer;font-size:.8rem">Show</summary><pre class="code-block" style="margin-top:4px;font-size:.75rem">${details}</pre></details>`:'\u2014'}</td></tr>`}).join('')}</tbody></table></div>`;
+}
+
+/* ── Header Refresh ─────────────────────────────────────────── */
+async function refreshHeader(){
+  const h=await api('/health');const s=await api('/stats?namespace='+encodeURIComponent(NAMESPACE));
+  const hb=document.getElementById('health-badge');
+  if(h){
+    const cls=h.status==='healthy'?'ok':'err';
+    hb.innerHTML=`<span class="health-dot ${cls}"></span> <span class="header-stat">${h.status==='healthy'?'Healthy':'Unhealthy'}</span>`;
+    document.getElementById('hdr-uptime').innerHTML='<b>Up:</b> '+Math.floor(h.uptime_seconds/60)+'m';
+  }
+  if(s){
+    document.getElementById('hdr-workers').innerHTML='<b>Workers:</b> '+s.active_workers;
+    document.getElementById('hdr-dlq').innerHTML='<b>DLQ:</b> '+s.dlq_size;
+  }
+  document.getElementById('footer-refresh').textContent='Last refresh: '+new Date().toLocaleTimeString();
+}
+
+/* ── SSE ────────────────────────────────────────────────────── */
+function sseRefresh(){
+  const page=currentPage();
+  if(page==='workflows'||page==='overview')route();
+  const hash=location.hash.slice(1)||'';
+  if(hash.startsWith('workflow/'))renderWorkflowDetail(hash.split('/').slice(1).join('/'),document.getElementById('content'));
+  refreshHeader();
+}
+try{
+  const sseUrl=API+'/events'+(AUTH_TOKEN?'?token='+encodeURIComponent(AUTH_TOKEN):'');
+  const es=new EventSource(sseUrl);
+  es.addEventListener('workflow_started',sseRefresh);
+  es.addEventListener('workflow_completed',sseRefresh);
+  es.addEventListener('workflow_failed',sseRefresh);
+}catch(e){console.warn('SSE not available:',e)}
+
+/* ── Keyboard Shortcuts ─────────────────────────────────────── */
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT')return;
+  if(e.key==='1')go('overview');if(e.key==='2')go('workflows');if(e.key==='3')go('dlq');
+  if(e.key==='4')go('workers');if(e.key==='5')go('schedules');if(e.key==='6')go('stats');
+  if(e.key==='7')go('audit');
+  if(e.key==='d')toggleTheme();
+});
+
+/* ── Init ───────────────────────────────────────────────────── */
+buildNav();
+window.addEventListener('hashchange',route);
+route();
+refreshHeader();
+setInterval(refreshHeader,POLL_INTERVAL);
+</script>
+</body>
+</html>

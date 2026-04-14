@@ -1,3 +1,9 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later OR Commercial
+# Copyright (C) 2026 Gravtory Contributors
+#
+# This file is part of Gravtory, licensed under AGPL-3.0-or-later.
+# See LICENSE file in the project root for full license information.
+
 """Gravtory error hierarchy.
 
 All exceptions inherit from GravtoryError so users can catch
@@ -154,6 +160,17 @@ class CompensationError(GravtoryError):
         )
 
 
+class CompensationNotFoundError(GravtoryError):
+    """Raised when a compensation handler cannot be resolved for a step."""
+
+    def __init__(self, step_name: str) -> None:
+        self.step_name = step_name
+        super().__init__(
+            f"No compensation handler found for step '{step_name}'. "
+            f"Ensure the step has a compensation handler registered."
+        )
+
+
 # ── Backend errors ───────────────────────────────────────────────
 
 
@@ -215,6 +232,78 @@ class SignalTimeoutError(SignalError):
 
 
 # ── Configuration errors ────────────────────────────────────────
+
+
+class CircuitOpenError(GravtoryError):
+    """Raised when a circuit breaker is open and rejects a call."""
+
+    def __init__(self, circuit_name: str) -> None:
+        self.circuit_name = circuit_name
+        super().__init__(
+            f"Circuit breaker '{circuit_name}' is OPEN. "
+            f"Calls are rejected until the recovery timeout elapses."
+        )
+
+
+class ConcurrencyLimitError(GravtoryError):
+    """Raised when a workflow exceeds its concurrency limit."""
+
+    def __init__(self, workflow_name: str, max_concurrent: int) -> None:
+        self.workflow_name = workflow_name
+        self.max_concurrent = max_concurrent
+        super().__init__(
+            f"Workflow '{workflow_name}' has reached its concurrency limit of {max_concurrent}."
+        )
+
+
+class WorkflowDeadlockError(GravtoryError):
+    """Raised when DAG execution reaches a deadlock (should never happen)."""
+
+    def __init__(self, run_id: str) -> None:
+        self.run_id = run_id
+        super().__init__(
+            f"Workflow run '{run_id}' reached a deadlock. "
+            f"This indicates a bug in the DAG execution engine."
+        )
+
+
+class StepAbortError(StepError):
+    """Raised when a step hits an abort_on exception type."""
+
+    def __init__(self, step_name: str, original_error: Exception) -> None:
+        self.original_error = original_error
+        super().__init__(
+            f"Step '{step_name}' aborted due to non-retryable error: {original_error}",
+            step_name=step_name,
+        )
+
+
+class StepOutputTypeError(StepError):
+    """Raised when a step's output doesn't match the expected type."""
+
+    def __init__(self, step_name: str, expected_type: str, actual_type: str) -> None:
+        self.expected_type = expected_type
+        self.actual_type = actual_type
+        super().__init__(
+            f"Step '{step_name}' returned {actual_type} but expected {expected_type}.",
+            step_name=step_name,
+        )
+
+
+# Backward-compatibility alias. Prefer ``StepRetryExhaustedError`` in new code.
+# Deprecated: will be removed in v2.0.
+StepExhaustedError = StepRetryExhaustedError
+
+
+class ValidationError(GravtoryError):
+    """Raised when workflow or step validation fails."""
+
+    def __init__(self, errors: list[str] | str) -> None:
+        if isinstance(errors, str):
+            errors = [errors]
+        self.errors = errors
+        msg = "Validation failed:\n" + "\n".join(f"  - {e}" for e in errors)
+        super().__init__(msg)
 
 
 class ConfigurationError(GravtoryError):

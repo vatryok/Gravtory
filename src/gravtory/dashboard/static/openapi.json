@@ -1,0 +1,322 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Gravtory Dashboard API",
+    "version": "1.0.0",
+    "description": "REST API for monitoring and managing Gravtory workflows.",
+    "license": {
+      "name": "AGPL-3.0-or-later",
+      "url": "https://www.gnu.org/licenses/agpl-3.0.html"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:7777",
+      "description": "Local development"
+    }
+  ],
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ],
+  "paths": {
+    "/api/health": {
+      "get": {
+        "summary": "Health check",
+        "tags": ["System"],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Service health status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string" },
+                    "db_healthy": { "type": "boolean" },
+                    "uptime_seconds": { "type": "number" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/stats": {
+      "get": {
+        "summary": "System statistics",
+        "tags": ["System"],
+        "parameters": [
+          {
+            "name": "namespace",
+            "in": "query",
+            "schema": { "type": "string", "default": "default" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Aggregate counts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "total_workflows": { "type": "integer" },
+                    "running": { "type": "integer" },
+                    "failed": { "type": "integer" },
+                    "completed": { "type": "integer" },
+                    "dlq_size": { "type": "integer" },
+                    "active_workers": { "type": "integer" },
+                    "schedules": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/workflows": {
+      "get": {
+        "summary": "List workflow runs",
+        "tags": ["Workflows"],
+        "parameters": [
+          { "name": "status", "in": "query", "schema": { "type": "string" } },
+          { "name": "workflow_name", "in": "query", "schema": { "type": "string" } },
+          { "name": "namespace", "in": "query", "schema": { "type": "string", "default": "default" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 50, "maximum": 1000 } },
+          { "name": "offset", "in": "query", "schema": { "type": "integer", "default": 0 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of workflow runs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "workflows": { "type": "array", "items": { "$ref": "#/components/schemas/WorkflowRun" } },
+                    "count": { "type": "integer" },
+                    "total": { "type": "integer" },
+                    "limit": { "type": "integer" },
+                    "offset": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/workflows/{run_id}": {
+      "get": {
+        "summary": "Get workflow run details",
+        "tags": ["Workflows"],
+        "parameters": [
+          { "name": "run_id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Workflow run with steps" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/workflows/{run_id}/retry": {
+      "post": {
+        "summary": "Retry a workflow run",
+        "tags": ["Workflows"],
+        "parameters": [
+          { "name": "run_id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Workflow queued for retry" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/api/workflows/{run_id}/cancel": {
+      "post": {
+        "summary": "Cancel a workflow run",
+        "tags": ["Workflows"],
+        "parameters": [
+          { "name": "run_id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Workflow cancelled" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/api/workflows/{run_id}/steps": {
+      "get": {
+        "summary": "List steps for a workflow run",
+        "tags": ["Workflows"],
+        "parameters": [
+          { "name": "run_id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "List of step outputs" }
+        }
+      }
+    },
+    "/api/workflows/{run_id}/signals/{name}": {
+      "post": {
+        "summary": "Send a signal to a workflow",
+        "tags": ["Workflows"],
+        "parameters": [
+          { "name": "run_id", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "name", "in": "path", "required": true, "schema": { "type": "string", "pattern": "^[a-zA-Z0-9_\\-\\.]{1,128}$" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": { "type": "object" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Signal sent" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "413": { "description": "Payload too large" }
+        }
+      }
+    },
+    "/api/dlq": {
+      "get": {
+        "summary": "List DLQ entries",
+        "tags": ["DLQ"],
+        "parameters": [
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 100, "maximum": 1000 } }
+        ],
+        "responses": {
+          "200": { "description": "List of DLQ entries" }
+        }
+      },
+      "delete": {
+        "summary": "Purge all DLQ entries",
+        "tags": ["DLQ"],
+        "responses": {
+          "200": { "description": "Purge result with deleted count" }
+        }
+      }
+    },
+    "/api/dlq/{entry_id}/retry": {
+      "post": {
+        "summary": "Retry a DLQ entry",
+        "tags": ["DLQ"],
+        "parameters": [
+          { "name": "entry_id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Entry retried" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/api/workers": {
+      "get": {
+        "summary": "List workers",
+        "tags": ["Workers"],
+        "responses": {
+          "200": { "description": "List of registered workers" }
+        }
+      }
+    },
+    "/api/schedules": {
+      "get": {
+        "summary": "List schedules",
+        "tags": ["Schedules"],
+        "responses": {
+          "200": { "description": "List of all schedules" }
+        }
+      }
+    },
+    "/api/schedules/{schedule_id}/toggle": {
+      "post": {
+        "summary": "Toggle schedule enabled/disabled",
+        "tags": ["Schedules"],
+        "parameters": [
+          { "name": "schedule_id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Schedule toggled" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/events": {
+      "get": {
+        "summary": "Server-Sent Events stream",
+        "tags": ["System"],
+        "parameters": [
+          { "name": "token", "in": "query", "description": "Auth token for SSE (EventSource cannot send headers)", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "SSE event stream", "content": { "text/event-stream": {} } },
+          "429": { "description": "Too many SSE connections" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
+    "schemas": {
+      "WorkflowRun": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "workflow_name": { "type": "string" },
+          "workflow_version": { "type": "string" },
+          "namespace": { "type": "string" },
+          "status": { "type": "string", "enum": ["pending", "running", "completed", "failed", "cancelled", "compensating", "compensated", "compensation_failed"] },
+          "created_at": { "type": "string", "format": "date-time" },
+          "completed_at": { "type": "string", "format": "date-time", "nullable": true },
+          "error_message": { "type": "string", "nullable": true }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": { "type": "string" },
+              "message": { "type": "string" },
+              "details": { "type": "object" }
+            },
+            "required": ["code", "message"]
+          }
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Bad request",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+      },
+      "NotFound": {
+        "description": "Resource not found",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+      },
+      "Conflict": {
+        "description": "State conflict (invalid transition)",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+      }
+    }
+  }
+}

@@ -1,6 +1,6 @@
 """Unit tests for core type definitions."""
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from gravtory.core.types import (
     Compensation,
@@ -41,10 +41,10 @@ class TestWorkflowStatus:
         assert {s.value for s in WorkflowStatus} == expected
 
     def test_string_value(self) -> None:
-        assert WorkflowStatus.PENDING == "pending"
-        assert WorkflowStatus.RUNNING == "running"
-        assert WorkflowStatus.COMPLETED == "completed"
-        assert WorkflowStatus.FAILED == "failed"
+        assert WorkflowStatus.PENDING.value == "pending"
+        assert WorkflowStatus.RUNNING.value == "running"
+        assert WorkflowStatus.COMPLETED.value == "completed"
+        assert WorkflowStatus.FAILED.value == "failed"
 
     def test_is_str_subclass(self) -> None:
         assert isinstance(WorkflowStatus.PENDING, str)
@@ -83,7 +83,7 @@ class TestWorkflowRun:
         assert run.parent_run_id is None
 
     def test_custom_values(self) -> None:
-        now = datetime.utcnow()
+        now = datetime.now(tz=timezone.utc)
         run = WorkflowRun(
             id="run-2",
             workflow_name="order",
@@ -262,3 +262,97 @@ class TestWorkflowDefinition:
         d2 = WorkflowDefinition()
         d1.steps[1] = StepDefinition(order=1)
         assert d2.steps == {}
+
+
+class TestTypesGapFill:
+    """Gap-fill tests for type edge cases and invariants."""
+
+    def test_workflow_status_transitions_are_strings(self) -> None:
+        """All WorkflowStatus values are usable as strings."""
+        for status in WorkflowStatus:
+            assert isinstance(status, str)
+            assert len(status) > 0
+
+    def test_step_status_transitions_are_strings(self) -> None:
+        for status in StepStatus:
+            assert isinstance(status, str)
+            assert len(status) > 0
+
+    def test_step_definition_with_all_fields(self) -> None:
+        """StepDefinition can be created with all optional fields."""
+        step = StepDefinition(
+            order=5,
+            name="complex_step",
+            depends_on=[1, 2, 3],
+            retries=3,
+            timeout=timedelta(seconds=30),
+            compensate="undo_complex",
+            parallel_config=ParallelConfig(max_concurrency=5),
+            signal_config=SignalConfig(name="approval", timeout=timedelta(hours=1)),
+            condition=lambda ctx: True,
+        )
+        assert step.order == 5
+        assert step.retries == 3
+        assert step.timeout == timedelta(seconds=30)
+        assert step.compensate == "undo_complex"
+        assert step.parallel_config is not None
+        assert step.parallel_config.max_concurrency == 5
+        assert step.signal_config is not None
+        assert step.signal_config.name == "approval"
+        assert step.condition is not None
+
+    def test_workflow_run_error_fields(self) -> None:
+        """WorkflowRun stores error info correctly."""
+        run = WorkflowRun(
+            id="err-run",
+            workflow_name="test",
+            status=WorkflowStatus.FAILED,
+            error_message="Something broke",
+            error_traceback="Traceback ...",
+        )
+        assert run.error_message == "Something broke"
+        assert run.error_traceback == "Traceback ..."
+
+    def test_step_result_equality(self) -> None:
+        """Two StepResults with same values are equal."""
+        r1 = StepResult(output="x", status=StepStatus.COMPLETED, duration_ms=100)
+        r2 = StepResult(output="x", status=StepStatus.COMPLETED, duration_ms=100)
+        assert r1 == r2
+
+    def test_dlq_entry_fields(self) -> None:
+        """DLQEntry stores all error context."""
+        entry = DLQEntry(
+            workflow_run_id="run-1",
+            step_order=3,
+            error_message="timeout",
+            error_traceback="Traceback ...",
+            retry_count=2,
+        )
+        assert entry.workflow_run_id == "run-1"
+        assert entry.step_order == 3
+        assert entry.retry_count == 2
+
+    def test_worker_info_all_fields(self) -> None:
+        """WorkerInfo populates all fields."""
+        worker = WorkerInfo(
+            worker_id="w-1",
+            node_id="node-a",
+            status=WorkerStatus.DRAINING,
+            current_task="run-1:step-3",
+        )
+        assert worker.worker_id == "w-1"
+        assert worker.status == WorkerStatus.DRAINING
+        assert worker.current_task == "run-1:step-3"
+
+    def test_schedule_all_fields(self) -> None:
+        """Schedule with all fields populated."""
+        sched = Schedule(
+            workflow_name="daily-report",
+            schedule_type=ScheduleType.INTERVAL,
+            schedule_config="3600",
+            enabled=True,
+            namespace="prod",
+        )
+        assert sched.schedule_type == ScheduleType.INTERVAL
+        assert sched.schedule_config == "3600"
+        assert sched.namespace == "prod"

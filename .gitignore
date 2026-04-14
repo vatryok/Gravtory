@@ -4,6 +4,7 @@ __pycache__/
 *.so
 dist/
 build/
+release/
 *.egg-info/
 .eggs/
 .mypy_cache/
@@ -17,6 +18,13 @@ env/
 venv/
 *.db
 *.sqlite3
+.hypothesis/
+.deepeval/
+.benchmarks/
+benchmarks/results.json
+site/
+*.log
+node_modules/
 .DS_Store
 .idea/
 .vscode/

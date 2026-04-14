@@ -7,17 +7,17 @@ class TestPublicAPI:
     def test_version_exists(self) -> None:
         assert hasattr(gravtory, "__version__")
         assert isinstance(gravtory.__version__, str)
-        assert gravtory.__version__ == "0.1.0"
+        assert gravtory.__version__ == "1.0.0"
 
     def test_all_exports_exist(self) -> None:
         for name in gravtory.__all__:
             assert hasattr(gravtory, name), f"Missing export: {name}"
 
     def test_enum_imports(self) -> None:
-        assert gravtory.WorkflowStatus.PENDING == "pending"
-        assert gravtory.StepStatus.COMPLETED == "completed"
-        assert gravtory.WorkerStatus.ACTIVE == "active"
-        assert gravtory.ScheduleType.CRON == "cron"
+        assert gravtory.WorkflowStatus.PENDING.value == "pending"
+        assert gravtory.StepStatus.COMPLETED.value == "completed"
+        assert gravtory.WorkerStatus.ACTIVE.value == "active"
+        assert gravtory.ScheduleType.CRON.value == "cron"
 
     def test_type_imports(self) -> None:
         run = gravtory.WorkflowRun(id="test", workflow_name="wf")

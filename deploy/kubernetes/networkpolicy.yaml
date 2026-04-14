@@ -1,0 +1,51 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: gravtory-dashboard-ingress
+  namespace: gravtory
+  labels:
+    app.kubernetes.io/name: gravtory
+    app.kubernetes.io/component: dashboard
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: gravtory
+      app.kubernetes.io/component: dashboard
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        # Only allow ingress from pods with this label
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: gravtory-ingress
+        # Or from the ingress controller namespace
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 7777
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: gravtory-engine-ingress
+  namespace: gravtory
+  labels:
+    app.kubernetes.io/name: gravtory
+    app.kubernetes.io/component: engine
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: gravtory
+      app.kubernetes.io/component: engine
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        # Only allow traffic from within the gravtory namespace
+        - podSelector: {}
+      ports:
+        - protocol: TCP
+          port: 9090

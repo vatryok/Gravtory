@@ -1,16 +1,71 @@
-Copyright (c) 2025 Gravtory Contributors
+================================================================================
+                            DUAL LICENSE NOTICE
+================================================================================
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU Affero General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+Copyright (C) 2026 Gravtory
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Affero General Public License for more details.
+This library is available under a dual licensing model. You may choose to use
+this library under either license option below.
 
-You should have received a copy of the GNU Affero General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
+================================================================================
+OPTION 1: GNU AFFERO GENERAL PUBLIC LICENSE v3.0 (AGPL-3.0)
+================================================================================
 
-SPDX-License-Identifier: AGPL-3.0-or-later
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU Affero General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your option) any
+later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
+details.
+
+You should have received a copy of the GNU Affero General Public License along
+with this program. If not, see <https://www.gnu.org/licenses/>.
+
+The full text of the AGPL-3.0 license is included in the file LICENSE-AGPL
+in the root of this repository.
+
+AGPL-3.0 Requirements:
+  • Free to use, modify, and distribute
+  • Must disclose source code when used over a network
+  • Derivative works must also use AGPL-3.0
+  • All modifications must be open-sourced
+  • Ideal for: Open-source projects, learning, personal use
+
+IMPORTANT: If you use this library to provide a network service (including
+web applications, APIs, or SaaS), you MUST make your complete source code
+available under AGPL-3.0.
+
+================================================================================
+OPTION 2: COMMERCIAL LICENSE
+================================================================================
+
+A commercial license is available for organizations that wish to use this
+library in proprietary applications or services without the open-source
+requirements of AGPL-3.0.
+
+Commercial License Benefits:
+  • Use in closed-source/proprietary products
+  • No requirement to disclose source code
+  • No copyleft obligations
+  • Suitable for SaaS and commercial products
+  • Integration into proprietary systems
+  • Priority technical support
+  • Legal protection and indemnification
+
+Ideal for: Companies, SaaS providers, proprietary products, commercial services
+
+For commercial licensing inquiries, contact: vatryok@protonmail.com
+
+================================================================================
+CONTRIBUTOR LICENSE AGREEMENT
+================================================================================
+
+By contributing to this project, you agree that your contributions will be
+licensed under the same dual license (AGPL-3.0 and Commercial) and that the
+project maintainer retains the right to license your contributions under both
+licenses.
+
+================================================================================

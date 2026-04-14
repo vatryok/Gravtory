@@ -4,10 +4,10 @@ build-backend = "hatchling.build"
 
 [project]
 name = "gravtory"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Crash-proof Python workflows with zero infrastructure. Temporal power as a pip install."
 readme = "README.md"
-license = {text = "AGPL-3.0-or-later"}
+license = {text = "AGPL-3.0-or-later OR Commercial"}
 requires-python = ">=3.10"
 authors = [
     { name = "Gravtory Contributors" },
@@ -25,7 +25,7 @@ keywords = [
     "resilience",
 ]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
     "Programming Language :: Python :: 3",
@@ -37,7 +37,7 @@ classifiers = [
     "Topic :: System :: Distributed Computing",
     "Typing :: Typed",
 ]
-dependencies = []
+dependencies = ["click>=8.0", "aiosqlite>=0.19.0", "aiohttp>=3.9.0"]
 
 [project.optional-dependencies]
 postgres = ["asyncpg>=0.29.0"]
@@ -45,6 +45,7 @@ sqlite = ["aiosqlite>=0.19.0"]
 mysql = ["aiomysql>=0.2.0"]
 mongodb = ["motor>=3.3.0"]
 redis = ["redis[hiredis]>=5.0.0"]
+encryption = ["cryptography>=41.0.0"]
 pydantic = ["pydantic>=2.0.0"]
 msgpack = ["msgpack>=1.0.0"]
 lz4 = ["lz4>=4.3.0"]
@@ -57,30 +58,39 @@ prometheus = ["prometheus-client>=0.19.0"]
 dashboard = ["aiohttp>=3.9.0"]
 ai = ["tiktoken>=0.5.0"]
 all = [
-    "gravtory[postgres,sqlite,mysql,mongodb,redis,pydantic,msgpack,lz4,zstd,otel,prometheus,dashboard,ai]",
+    "gravtory[postgres,sqlite,mysql,mongodb,redis,encryption,pydantic,msgpack,lz4,zstd,otel,prometheus,dashboard,ai]",
 ]
 dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.0",
-    "pytest-cov>=4.1.0",
-    "pytest-timeout>=2.2.0",
-    "hypothesis>=6.90.0",
-    "mypy>=1.8.0",
-    "ruff>=0.2.0",
-    "pre-commit>=3.6.0",
-    "mkdocs>=1.5.0",
+    "pytest-cov>=5.0.0",
+    "pytest-timeout>=2.3.0",
+    "pytest-xdist>=3.5.0",
+    "hypothesis>=6.100.0",
+    "mypy>=1.11.0",
+    "ruff>=0.6.0",
+    "pre-commit>=3.8.0",
+    "mkdocs>=1.6.0",
     "mkdocs-material>=9.5.0",
-    "mkdocstrings[python]>=0.24.0",
+    "mkdocstrings[python]>=0.25.0",
+    "pip-audit>=2.7.0",
+    "bandit>=1.7.0",
+    "mutmut>=2.4.0",
+    "pytest-benchmark>=4.0.0",
+    "watchfiles>=0.21.0",
+    "structlog>=24.1.0",
 ]
 
 [project.urls]
-Homepage = "https://github.com/gravtory/gravtory"
-Documentation = "https://gravtory.dev"
-Repository = "https://github.com/gravtory/gravtory"
-Issues = "https://github.com/gravtory/gravtory/issues"
+Homepage = "https://github.com/vatryok/gravtory"
+Repository = "https://github.com/vatryok/gravtory"
+Issues = "https://github.com/vatryok/gravtory/issues"
 
 [project.scripts]
 gravtory = "gravtory.cli.main:cli"
+
+[tool.hatch.version]
+path = "src/gravtory/_version.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/gravtory"]
@@ -92,7 +102,10 @@ src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "SIM", "TCH", "RUF"]
-ignore = ["E501"]
+ignore = ["E501", "A002", "B027"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["RUF059", "N806", "SIM105", "SIM117", "E402", "F841", "E731", "C408", "TC001", "TC003"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["gravtory"]
@@ -105,6 +118,16 @@ warn_unused_configs = true
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
 
+[[tool.mypy.overrides]]
+module = [
+    "msgpack",
+    "lz4.*",
+    "aiomysql",
+    "asyncpg",
+    "opentelemetry.exporter.otlp.proto.grpc.trace_exporter",
+]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
@@ -113,6 +136,13 @@ markers = [
     "benchmark: marks performance benchmarks",
     "integration: marks integration tests requiring real DB",
     "e2e: marks end-to-end tests requiring multi-process",
+    "property: marks property-based tests using Hypothesis",
+    "mutation: marks mutation tests",
+]
+filterwarnings = [
+    "ignore:PickleSerializer instantiated without allowed_classes:UserWarning",
+    "ignore::ResourceWarning",
+    "default::pytest.PytestUnraisableExceptionWarning",
 ]
 
 [tool.coverage.run]
@@ -128,4 +158,23 @@ exclude_lines = [
     "raise NotImplementedError",
     "@abstractmethod",
     "\\.\\.\\.",
+    "if __name__",
+    "except ImportError",
 ]
+exclude_also = [
+    "def __repr__",
+]
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+version = "1.0.0"
+tag_format = "v$version"
+version_files = [
+    "src/gravtory/__about__.py:__version__",
+]
+update_changelog_on_bump = true
+changelog_file = "CHANGELOG.md"
+
+[tool.mutmut]
+paths_to_mutate = "src/gravtory/"
+tests_dir = "tests/unit/"

@@ -1,0 +1,35 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+  id-token: write  # For trusted PyPI publishing
+
+jobs:
+  # ── Run full CI first ───────────────────────────────────────────
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  # ── Build and publish ───────────────────────────────────────────
+  publish:
+    needs: ci
+    runs-on: ubuntu-latest
+    environment: pypi
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install build tools
+        run: pip install build
+      - name: Build sdist and wheel
+        run: python -m build
+      - name: Verify package
+        run: |
+          pip install dist/*.whl
+          python -c "import gravtory; print(f'gravtory {gravtory.__version__}')"
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

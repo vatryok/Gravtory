@@ -1,0 +1,41 @@
+# Locked production dependencies for Gravtory v1.0.0
+# Generated for reproducible builds (DEP-001).
+# Regenerate with: pip-compile --generate-hashes --output-file=requirements-lock.txt pyproject.toml
+# Updated: April 2026
+#
+# Core
+click==8.3.2
+aiosqlite==0.22.1
+aiohttp==3.13.5
+
+# PostgreSQL
+asyncpg==0.31.0
+
+# MySQL
+aiomysql==0.3.2
+
+# MongoDB
+motor==3.7.1
+
+# Redis
+redis==7.4.0
+hiredis==3.3.1
+
+# Encryption
+cryptography==46.0.7
+
+# Serialization
+msgpack==1.1.2
+lz4==4.4.5
+zstandard==0.25.0
+
+# Observability
+opentelemetry-api==1.41.0
+opentelemetry-sdk==1.41.0
+prometheus-client==0.25.0
+
+# AI
+tiktoken==0.12.0
+
+# Pydantic
+pydantic==2.13.0

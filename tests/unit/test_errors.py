@@ -154,33 +154,100 @@ class TestConfigurationErrors:
         assert isinstance(err, GravtoryError)
 
 
+class TestErrorGapFill:
+    """Gap-fill tests for error hierarchy edge cases."""
+
+    def test_circuit_open_error(self) -> None:
+        from gravtory.core.errors import CircuitOpenError
+
+        err = CircuitOpenError("payment-api")
+        assert err.circuit_name == "payment-api"
+        assert "OPEN" in str(err)
+        assert isinstance(err, GravtoryError)
+
+    def test_concurrency_limit_error(self) -> None:
+        from gravtory.core.errors import ConcurrencyLimitError
+
+        err = ConcurrencyLimitError("OrderWorkflow", 10)
+        assert err.workflow_name == "OrderWorkflow"
+        assert err.max_concurrent == 10
+        assert "10" in str(err)
+        assert isinstance(err, GravtoryError)
+
+    def test_error_inheritance_chain(self) -> None:
+        """Step errors chain: StepError -> GravtoryError -> Exception."""
+        err = StepTimeoutError("charge", 30.0)
+        assert isinstance(err, StepError)
+        assert isinstance(err, GravtoryError)
+        assert isinstance(err, Exception)
+
+    def test_backend_error_chain(self) -> None:
+        """Backend errors chain: BackendConnectionError -> BackendError -> GravtoryError."""
+        err = BackendConnectionError("postgresql", "timeout")
+        assert isinstance(err, BackendError)
+        assert isinstance(err, GravtoryError)
+
+    def test_gravtory_error_default_details(self) -> None:
+        """GravtoryError defaults to empty dict for details."""
+        err = GravtoryError("test")
+        assert err.details == {}
+
+    def test_step_error_default_fields(self) -> None:
+        """StepError with no optional fields still works."""
+        err = StepError("generic step error")
+        assert err.step_name is None
+        assert err.step_order is None
+
+    def test_error_str_representations(self) -> None:
+        """All error types produce meaningful string representations."""
+        errors = [
+            WorkflowNotFoundError("x"),
+            WorkflowAlreadyExistsError("x"),
+            WorkflowRunNotFoundError("run-1"),
+            WorkflowRunAlreadyExistsError("run-1"),
+            WorkflowCancelledError("run-1"),
+            WorkflowDeadlineExceededError("run-1"),
+            StepTimeoutError("step", 10.0),
+            StepRetryExhaustedError("step", 3),
+            StepDependencyError("step", 2),
+            StepConditionError("step"),
+            CompensationError("step"),
+            BackendConnectionError("pg", "refused"),
+            BackendMigrationError("sqlite", "err"),
+            BackendLockError("lock-1"),
+            SerializationError("bad data"),
+            SignalTimeoutError("sig", 60.0),
+        ]
+        for err in errors:
+            assert len(str(err)) > 0, f"{type(err).__name__} has empty str"
+
+
 class TestCatchAll:
     """Verify that all errors can be caught with a single except GravtoryError."""
 
     def test_catch_all_errors(self) -> None:
-        error_classes = [
-            lambda: WorkflowNotFoundError("x"),
-            lambda: WorkflowAlreadyExistsError("x"),
-            lambda: WorkflowRunNotFoundError("x"),
-            lambda: WorkflowRunAlreadyExistsError("x"),
-            lambda: WorkflowCancelledError("x"),
-            lambda: WorkflowDeadlineExceededError("x"),
-            lambda: StepError("x"),
-            lambda: StepTimeoutError("x", 1.0),
-            lambda: StepRetryExhaustedError("x", 1),
-            lambda: StepDependencyError("x", 1),
-            lambda: StepConditionError("x"),
-            lambda: CompensationError("x"),
-            lambda: BackendError("x"),
-            lambda: BackendConnectionError("x", "y"),
-            lambda: BackendMigrationError("x", "y"),
-            lambda: BackendLockError("x"),
-            lambda: SerializationError("x"),
-            lambda: SignalError("x"),
-            lambda: SignalTimeoutError("x", 1.0),
-            lambda: ConfigurationError("x"),
-            lambda: InvalidWorkflowError("x", "y"),
+        errors: list[GravtoryError] = [
+            WorkflowNotFoundError("x"),
+            WorkflowAlreadyExistsError("x"),
+            WorkflowRunNotFoundError("x"),
+            WorkflowRunAlreadyExistsError("x"),
+            WorkflowCancelledError("x"),
+            WorkflowDeadlineExceededError("x"),
+            StepError("x"),
+            StepTimeoutError("x", 1.0),
+            StepRetryExhaustedError("x", 1),
+            StepDependencyError("x", 1),
+            StepConditionError("x"),
+            CompensationError("x"),
+            BackendError("x"),
+            BackendConnectionError("x", "y"),
+            BackendMigrationError("x", "y"),
+            BackendLockError("x"),
+            SerializationError("x"),
+            SignalError("x"),
+            SignalTimeoutError("x", 1.0),
+            ConfigurationError("x"),
+            InvalidWorkflowError("x", "y"),
         ]
-        for make_error in error_classes:
-            err = make_error()
+        for err in errors:
             assert isinstance(err, GravtoryError), f"{type(err).__name__} is not a GravtoryError"

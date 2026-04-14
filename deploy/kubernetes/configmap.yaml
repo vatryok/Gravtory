@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gravtory-config
+  namespace: gravtory
+  labels:
+    app.kubernetes.io/name: gravtory
+data:
+  GRAVTORY_BACKEND: "postgresql://gravtory:$(POSTGRES_PASSWORD)@postgres-service:5432/gravtory"
+  GRAVTORY_WORKERS: "4"
+  GRAVTORY_SCHEDULER: "true"
+  GRAVTORY_DASHBOARD: "true"
+  GRAVTORY_DASHBOARD_PORT: "7777"
+  GRAVTORY_NAMESPACE: "default"
+  GRAVTORY_SERIALIZER: "json"
+  GRAVTORY_TABLE_PREFIX: "gravtory_"

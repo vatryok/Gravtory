@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: gravtory-dashboard-service
+  namespace: gravtory
+  labels:
+    app.kubernetes.io/name: gravtory
+    app.kubernetes.io/component: dashboard
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: gravtory
+    app.kubernetes.io/component: dashboard
+  ports:
+    - name: http
+      port: 80
+      targetPort: 7777
+      protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gravtory-metrics-service
+  namespace: gravtory
+  labels:
+    app.kubernetes.io/name: gravtory
+    app.kubernetes.io/component: engine
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: gravtory
+    app.kubernetes.io/component: engine
+  ports:
+    - name: metrics
+      port: 9090
+      targetPort: 9090
+      protocol: TCP

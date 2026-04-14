@@ -1,8 +1,7 @@
 site_name: Gravtory
 site_description: "Crash-proof Python workflows with zero infrastructure."
-site_url: https://gravtory.dev
-repo_url: https://github.com/gravtory/gravtory
-repo_name: gravtory/gravtory
+repo_url: https://github.com/vatryok/gravtory
+repo_name: vatryok/gravtory
 
 theme:
   name: material
@@ -58,15 +57,23 @@ nav:
       - Installation: getting-started/installation.md
       - Quick Start: getting-started/quickstart.md
       - Core Concepts: getting-started/concepts.md
+      - Configuration: getting-started/configuration.md
   - Guides:
       - Workflows: guides/workflows.md
       - Steps: guides/steps.md
+      - Retry & Backoff: guides/retry.md
       - Sagas: guides/sagas.md
+      - Parallel Execution: guides/parallel.md
+      - Conditional Branching: guides/conditions.md
       - Signals: guides/signals.md
-      - Distribution: guides/distribution.md
       - Scheduling: guides/scheduling.md
+      - Distribution: guides/distribution.md
       - Testing: guides/testing.md
+      - CLI: guides/cli.md
+      - Dashboard: guides/dashboard.md
       - Observability: guides/observability.md
+      - AI/ML: guides/ai-ml.md
+      - Troubleshooting: guides/troubleshooting.md
   - Backends:
       - Overview: backends/overview.md
       - PostgreSQL: backends/postgresql.md
@@ -75,11 +82,19 @@ nav:
       - MongoDB: backends/mongodb.md
       - Redis: backends/redis.md
   - API Reference:
+      - Gravtory: api/gravtory.md
+      - Decorators: api/decorators.md
       - Types: api/types.md
       - Errors: api/errors.md
       - Backend: api/backend.md
+      - Testing: api/testing.md
+  - Advanced:
+      - Architecture: advanced/architecture.md
+      - Encryption: advanced/encryption.md
+      - Performance: advanced/performance.md
   - Migration:
       - From Celery: migration/celery.md
       - From Temporal: migration/temporal.md
+      - From DBOS: migration/dbos.md
   - Contributing: contributing.md
   - Changelog: changelog.md

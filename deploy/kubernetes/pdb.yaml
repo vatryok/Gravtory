@@ -1,0 +1,14 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: gravtory-engine-pdb
+  namespace: gravtory
+  labels:
+    app.kubernetes.io/name: gravtory
+    app.kubernetes.io/component: engine
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: gravtory
+      app.kubernetes.io/component: engine
