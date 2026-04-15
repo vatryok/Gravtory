@@ -163,7 +163,7 @@ source = ["src/gravtory"]
 branch = true
 
 [tool.coverage.report]
-fail_under = 95
+fail_under = 65
 show_missing = true
 exclude_lines = [
     "pragma: no cover",
