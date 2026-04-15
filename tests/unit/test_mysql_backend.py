@@ -6,6 +6,10 @@ without requiring a running MySQL server.
 
 from __future__ import annotations
 
+import pytest
+
+pytest.importorskip("aiomysql", reason="aiomysql not installed – skipping MySQL backend tests")
+
 from datetime import datetime, timezone
 
 from gravtory.backends.mysql import MySQLBackend, _mysql_schema, _parse_mysql_dsn
