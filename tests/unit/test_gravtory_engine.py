@@ -65,6 +65,7 @@ class TestGravtoryInit:
         assert not g._started
 
     def test_custom_properties(self) -> None:
+        pytest.importorskip("cryptography", reason="cryptography not installed")
         g = Gravtory(
             ":memory:",
             workers=4,

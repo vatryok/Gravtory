@@ -2,7 +2,15 @@
 
 from __future__ import annotations
 
+import pytest
+
 from gravtory.observability.tracing import TracingProvider, _NoOpSpan
+
+try:
+    import opentelemetry  # noqa: F401
+    _HAS_OTEL = True
+except ImportError:
+    _HAS_OTEL = False
 
 
 class TestTracingProviderNoOp:
@@ -16,12 +24,13 @@ class TestTracingProviderNoOp:
         span.set_status("OK")
         span.record_exception(ValueError("test"))
 
+    @pytest.mark.skipif(not _HAS_OTEL, reason="opentelemetry not installed")
     def test_provider_enabled_property(self) -> None:
         """Provider reports enabled=True when OTel is available."""
         provider = TracingProvider(service_name="test")
-        # OTel IS installed in dev env
         assert provider.enabled is True
 
+    @pytest.mark.skipif(not _HAS_OTEL, reason="opentelemetry not installed")
     def test_get_tracer_returns_tracer(self) -> None:
         provider = TracingProvider(service_name="test-tracer")
         tracer = provider.get_tracer()
@@ -60,6 +69,7 @@ class TestTracingProviderNoOp:
         except RuntimeError:
             pass
 
+    @pytest.mark.skipif(not _HAS_OTEL, reason="opentelemetry not installed")
     def test_console_export_mode(self) -> None:
         """Console export mode should not raise."""
         provider = TracingProvider(service_name="console-test", console_export=True)
@@ -93,6 +103,7 @@ class TestTracingGapFill:
             with provider.step_span("Wf", "run-1", f"step_{i}", i) as span:
                 span.set_attribute("order", i)
 
+    @pytest.mark.skipif(not _HAS_OTEL, reason="opentelemetry not installed")
     def test_provider_different_service_names(self) -> None:
         """Different service names produce independent providers."""
         p1 = TracingProvider(service_name="svc-a")

@@ -173,13 +173,17 @@ class SignalHandler:
         PostgreSQLBackend → PostgreSQLSignalTransport (LISTEN/NOTIFY)
         Everything else   → PollingSignalTransport (DB polling)
         """
-        from gravtory.backends.postgresql import PostgreSQLBackend
         from gravtory.signals.transport import (
             PollingSignalTransport,
             PostgreSQLSignalTransport,
         )
 
-        if isinstance(backend, PostgreSQLBackend):
+        try:
+            from gravtory.backends.postgresql import PostgreSQLBackend
+        except ImportError:
+            PostgreSQLBackend = None  # type: ignore[assignment,misc]
+
+        if PostgreSQLBackend is not None and isinstance(backend, PostgreSQLBackend):
             logger.info("Using PostgreSQL LISTEN/NOTIFY signal transport")
             return PostgreSQLSignalTransport(backend)
 

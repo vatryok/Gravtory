@@ -139,6 +139,7 @@ class TestTaskQueueContract:
     """Every backend MUST support enqueue, claim, complete, fail."""
 
     async def test_enqueue_and_claim(self, backend: Backend) -> None:
+        await backend.create_workflow_run(WorkflowRun(id="tq-1", workflow_name="WF"))
         step = PendingStep(
             workflow_run_id="tq-1",
             step_order=1,
@@ -207,8 +208,8 @@ class TestDLQContract:
             step_order=1,
             error_message="boom",
         )
-        await backend.add_dlq_entry(entry)
-        entries = await backend.list_dlq_entries()
+        await backend.add_to_dlq(entry)
+        entries = await backend.list_dlq()
         assert any(e.workflow_run_id == "dlq-1" for e in entries)
 
     async def test_get_by_id(self, backend: Backend) -> None:
@@ -217,8 +218,8 @@ class TestDLQContract:
             step_order=1,
             error_message="boom",
         )
-        await backend.add_dlq_entry(entry)
-        entries = await backend.list_dlq_entries()
+        await backend.add_to_dlq(entry)
+        entries = await backend.list_dlq()
         target = next(e for e in entries if e.workflow_run_id == "dlq-get")
         got = await backend.get_dlq_entry(target.id)
         assert got is not None

@@ -45,4 +45,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `py.typed` marker (PEP 561) for full type checker compatibility
 - Comprehensive test suite: unit, integration, E2E, property-based, and mutation tests
 
+## [0.1.0] - 2026-04-10
+
+### Added
+- Initial proof-of-concept release
+- Core execution engine with step checkpointing
+- SQLite and in-memory backends
+- Basic workflow and step decorators
+
 [1.0.0]: https://github.com/vatryok/gravtory/releases/tag/v1.0.0
+[0.1.0]: https://github.com/vatryok/gravtory/releases/tag/v0.1.0

@@ -25,6 +25,7 @@ from gravtory.core.types import (
 
 class TestCreateBackendGaps:
     def test_create_postgresql_backend(self) -> None:
+        pytest.importorskip("asyncpg", reason="asyncpg not installed")
         from gravtory.backends import create_backend
         from gravtory.backends.postgresql import PostgreSQLBackend
 
@@ -32,6 +33,7 @@ class TestCreateBackendGaps:
         assert isinstance(b, PostgreSQLBackend)
 
     def test_create_postgres_backend(self) -> None:
+        pytest.importorskip("asyncpg", reason="asyncpg not installed")
         from gravtory.backends import create_backend
         from gravtory.backends.postgresql import PostgreSQLBackend
 

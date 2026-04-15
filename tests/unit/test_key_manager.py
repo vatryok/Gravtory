@@ -63,16 +63,14 @@ class TestKeyManager:
 
     def test_get_encryptor_with_key(self) -> None:
         """get_encryptor returns an Encryptor when key exists."""
+        pytest.importorskip("cryptography", reason="cryptography not installed")
         km = KeyManager(default_key="test-key")
-        try:
-            enc = km.get_encryptor("any")
-            assert enc is not None
-            # Verify roundtrip
-            ct = enc.encrypt(b"hello")
-            pt = enc.decrypt(ct)
-            assert pt == b"hello"
-        except ImportError:
-            pytest.skip("cryptography package not installed")
+        enc = km.get_encryptor("any")
+        assert enc is not None
+        # Verify roundtrip
+        ct = enc.encrypt(b"hello")
+        pt = enc.decrypt(ct)
+        assert pt == b"hello"
 
     def test_get_encryptor_without_key(self) -> None:
         """get_encryptor returns None when no key configured."""
@@ -110,14 +108,10 @@ class TestRotateKeys:
 
     @pytest.mark.asyncio
     async def test_rotate_keys_basic(self) -> None:
+        pytest.importorskip("cryptography", reason="cryptography not installed")
         from gravtory.backends.memory import InMemoryBackend
         from gravtory.core.types import StepOutput, StepStatus, WorkflowRun, WorkflowStatus
-
-        try:
-            from gravtory.serialization.encryption import AES256GCMEncryptor
-        except ImportError:
-            pytest.skip("cryptography package not installed")
-
+        from gravtory.serialization.encryption import AES256GCMEncryptor
         from gravtory.enterprise.key_manager import rotate_keys
 
         backend = InMemoryBackend()
@@ -158,6 +152,7 @@ class TestRotateKeys:
 
     @pytest.mark.asyncio
     async def test_rotate_keys_skips_none_output(self) -> None:
+        pytest.importorskip("cryptography", reason="cryptography not installed")
         from gravtory.backends.memory import InMemoryBackend
         from gravtory.core.types import StepOutput, StepStatus, WorkflowRun, WorkflowStatus
         from gravtory.enterprise.key_manager import rotate_keys
@@ -188,6 +183,7 @@ class TestRotateKeys:
 
     @pytest.mark.asyncio
     async def test_rotate_keys_handles_bad_data(self) -> None:
+        pytest.importorskip("cryptography", reason="cryptography not installed")
         from gravtory.backends.memory import InMemoryBackend
         from gravtory.core.types import StepOutput, StepStatus, WorkflowRun, WorkflowStatus
         from gravtory.enterprise.key_manager import rotate_keys

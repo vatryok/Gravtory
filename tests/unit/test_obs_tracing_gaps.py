@@ -2,7 +2,15 @@
 
 from __future__ import annotations
 
+import pytest
+
 from gravtory.observability.tracing import TracingProvider, _NoOpSpan
+
+try:
+    import opentelemetry  # noqa: F401
+    _HAS_OTEL = True
+except ImportError:
+    _HAS_OTEL = False
 
 
 class TestNoOpSpan:
@@ -20,10 +28,12 @@ class TestNoOpSpan:
 
 
 class TestTracingProvider:
+    @pytest.mark.skipif(not _HAS_OTEL, reason="opentelemetry not installed")
     def test_enabled_with_otel(self) -> None:
         tp = TracingProvider(service_name="test-svc", console_export=True)
         assert tp.enabled is True
 
+    @pytest.mark.skipif(not _HAS_OTEL, reason="opentelemetry not installed")
     def test_get_tracer(self) -> None:
         tp = TracingProvider(service_name="test-svc2")
         tracer = tp.get_tracer()
