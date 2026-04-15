@@ -113,12 +113,12 @@ class TestJSONSerializerBenchmark:
 
 class TestPickleSerializerBenchmark:
     def test_serialize_small(self, benchmark: object) -> None:
-        ser = PickleSerializer()
+        ser = PickleSerializer(unsafe_pickle=True)
         data = {"key": "value", "num": 42, "nested": {"a": [1, 2, 3]}}
         benchmark(ser.serialize, data)  # type: ignore[operator]
 
     def test_serialize_large(self, benchmark: object) -> None:
-        ser = PickleSerializer()
+        ser = PickleSerializer(unsafe_pickle=True)
         data = {"items": [{"id": i, "value": f"item-{i}"} for i in range(1000)]}
         benchmark(ser.serialize, data)  # type: ignore[operator]
 

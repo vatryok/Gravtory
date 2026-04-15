@@ -91,10 +91,17 @@ class TestAuthBypass:
             )
             assert resp.status == 200
 
-    async def test_static_html_no_auth_required(self) -> None:
+    async def test_static_html_requires_auth(self) -> None:
         app = await _make_app(auth_token="secret-token-123")
         async with TestClient(TestServer(app)) as client:
+            # Dashboard is protected when auth is enabled
             resp = await client.get("/")
+            assert resp.status == 401
+            # With valid token, dashboard is accessible
+            resp = await client.get(
+                "/",
+                headers={"Authorization": "Bearer secret-token-123"},
+            )
             assert resp.status == 200
 
 
@@ -221,9 +228,10 @@ class TestHeaderInjection:
     async def test_crlf_in_header(self) -> None:
         app = await _make_app()
         async with TestClient(TestServer(app)) as client:
-            resp = await client.get(
-                "/api/health",
-                headers={"X-Custom": "value\r\nInjected: header"},
-            )
-            # aiohttp should handle this; just ensure no crash
-            assert resp.status in (200, 400)
+            # aiohttp >= 3.10 rejects CRLF in headers at the client level,
+            # which is the correct security behaviour (prevents header injection).
+            with pytest.raises(ValueError, match="[Nn]ewline|[Cc]arriage|header injection"):
+                await client.get(
+                    "/api/health",
+                    headers={"X-Custom": "value\r\nInjected: header"},
+                )

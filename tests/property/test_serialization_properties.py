@@ -61,7 +61,7 @@ class TestPickleSerializerRoundTrip:
     @settings(max_examples=200)
     def test_serialize_deserialize_identity(self, data: object) -> None:
         """Pickle serialize→deserialize returns the original value."""
-        ser = PickleSerializer()
+        ser = PickleSerializer(unsafe_pickle=True)
         encoded = ser.serialize(data)
         assert isinstance(encoded, bytes)
         decoded = ser.deserialize(encoded)
@@ -93,6 +93,7 @@ class TestAES256GCMRoundTrip:
     @settings(max_examples=200, deadline=None)
     def test_encrypt_decrypt_identity(self, data: bytes) -> None:
         """encrypt→decrypt returns the original bytes."""
+        pytest.importorskip("cryptography")
         enc = AES256GCMEncryptor("test-secret-key-32-bytes-long!!")
         encrypted = enc.encrypt(data)
         assert isinstance(encrypted, bytes)
@@ -104,6 +105,7 @@ class TestAES256GCMRoundTrip:
     @settings(max_examples=100, deadline=None)
     def test_both_encryptions_decrypt_correctly(self, data: bytes) -> None:
         """Two encryptions of the same plaintext both decrypt correctly."""
+        pytest.importorskip("cryptography")
         enc = AES256GCMEncryptor("test-secret-key-32-bytes-long!!")
         e1 = enc.encrypt(data)
         e2 = enc.encrypt(data)

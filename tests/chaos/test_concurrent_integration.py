@@ -48,15 +48,13 @@ async def test_concurrent_claim_step_no_duplicates():
         await backend.register_worker(
             WorkerInfo(
                 worker_id=f"worker-{i}",
-                hostname="localhost",
-                pid=1000 + i,
-                status="active",
+                node_id="localhost",
             )
         )
 
     # Create a workflow run
     run = WorkflowRun(
-        run_id="conc-claim-1",
+        id="conc-claim-1",
         workflow_name="test_wf",
         workflow_version=1,
         namespace="default",
@@ -71,7 +69,6 @@ async def test_concurrent_claim_step_no_duplicates():
             PendingStep(
                 workflow_run_id="conc-claim-1",
                 step_order=step_order,
-                step_name=f"step_{step_order}",
                 priority=0,
             )
         )
@@ -106,7 +103,7 @@ async def test_concurrent_signal_consume_no_duplicates():
 
     # Create workflow run
     run = WorkflowRun(
-        run_id="conc-signal-1",
+        id="conc-signal-1",
         workflow_name="test_wf",
         workflow_version=1,
         namespace="default",
@@ -171,7 +168,7 @@ async def test_concurrent_status_updates():
     backend = await _init_backend()
 
     run = WorkflowRun(
-        run_id="conc-status-1",
+        id="conc-status-1",
         workflow_name="test_wf",
         workflow_version=1,
         namespace="default",

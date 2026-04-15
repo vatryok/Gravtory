@@ -38,13 +38,13 @@ def _make_simple_workflow(step_fn=None):
     return WorkflowDefinition(
         name="chaos_test_wf",
         version=1,
-        steps=[
-            StepDefinition(
+        steps={
+            1: StepDefinition(
                 name="step_1",
-                order=0,
+                order=1,
                 function=step_fn,
             ),
-        ],
+        },
         config=WorkflowConfig(namespace="default"),
     )
 
@@ -190,10 +190,10 @@ async def test_concurrent_step_one_fails():
     defn = WorkflowDefinition(
         name="parallel_chaos_wf",
         version=1,
-        steps=[
-            StepDefinition(name="good", order=0, function=good_step),
-            StepDefinition(name="bad", order=1, function=bad_step, depends_on=[]),
-        ],
+        steps={
+            1: StepDefinition(name="good", order=1, function=good_step),
+            2: StepDefinition(name="bad", order=2, function=bad_step, depends_on=[]),
+        },
         config=WorkflowConfig(namespace="default"),
     )
     registry.register(defn)

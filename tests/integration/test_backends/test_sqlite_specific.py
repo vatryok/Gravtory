@@ -52,6 +52,7 @@ class TestCreateBackendAutodetect:
         assert isinstance(b, SQLiteBackend)
 
     def test_pg_autodetect(self) -> None:
+        pytest.importorskip("asyncpg")
         from gravtory.backends import create_backend
         from gravtory.backends.postgresql import PostgreSQLBackend
 
