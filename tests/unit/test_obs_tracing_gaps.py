@@ -8,6 +8,7 @@ from gravtory.observability.tracing import TracingProvider, _NoOpSpan
 
 try:
     import opentelemetry  # noqa: F401
+
     _HAS_OTEL = True
 except ImportError:
     _HAS_OTEL = False
