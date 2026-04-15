@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import inspect
 import json
 import logging
@@ -936,10 +937,8 @@ class ExecutionEngine:
                             bytes(output_data), aad=self._make_aad(run_id, order)
                         )
                     elif isinstance(output_data, (bytes, memoryview)):
-                        try:
+                        with contextlib.suppress(json.JSONDecodeError, UnicodeDecodeError):
                             output_data = json.loads(output_data)
-                        except (json.JSONDecodeError, UnicodeDecodeError):
-                            pass
                     result = StepResult(
                         output=output_data,
                         status=result.status,
