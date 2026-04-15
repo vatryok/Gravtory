@@ -938,7 +938,7 @@ class ExecutionEngine:
                         )
                     elif isinstance(output_data, (bytes, memoryview)):
                         with contextlib.suppress(json.JSONDecodeError, UnicodeDecodeError):
-                            output_data = json.loads(output_data)
+                            output_data = json.loads(bytes(output_data))
                     result = StepResult(
                         output=output_data,
                         status=result.status,

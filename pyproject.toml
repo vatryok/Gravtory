@@ -135,11 +135,11 @@ ignore_errors = true
 
 [[tool.mypy.overrides]]
 module = ["gravtory.backends.sqlite"]
-disable_error_codes = ["no-any-return"]
+disable_error_code = ["no-any-return"]
 
 [[tool.mypy.overrides]]
 module = ["gravtory.dashboard.server"]
-disable_error_codes = ["misc"]
+disable_error_code = ["misc"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
