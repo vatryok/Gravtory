@@ -142,7 +142,6 @@ class TestTaskQueueContract:
         step = PendingStep(
             workflow_run_id="tq-1",
             step_order=1,
-            step_name="step_a",
         )
         await backend.enqueue_step(step)
         claimed = await backend.claim_step("worker-1")
@@ -156,7 +155,7 @@ class TestTaskQueueContract:
 
     async def test_complete_step(self, backend: Backend) -> None:
         await backend.create_workflow_run(WorkflowRun(id="tq-comp", workflow_name="WF"))
-        step = PendingStep(workflow_run_id="tq-comp", step_order=1, step_name="step_a")
+        step = PendingStep(workflow_run_id="tq-comp", step_order=1)
         await backend.enqueue_step(step)
         claimed = await backend.claim_step("worker-2")
         assert claimed is not None
@@ -177,21 +176,21 @@ class TestLockingContract:
     """Every backend MUST support acquire/release/refresh locks."""
 
     async def test_acquire_and_release(self, backend: Backend) -> None:
-        acquired = await backend.acquire_lock("test-lock", "node-1", ttl=30)
+        acquired = await backend.acquire_lock("test-lock", "node-1", ttl_seconds=30)
         assert acquired is True
         await backend.release_lock("test-lock", "node-1")
 
     async def test_acquire_blocks_other_nodes(self, backend: Backend) -> None:
-        await backend.acquire_lock("excl-lock", "node-1", ttl=30)
-        acquired = await backend.acquire_lock("excl-lock", "node-2", ttl=30)
+        await backend.acquire_lock("excl-lock", "node-1", ttl_seconds=30)
+        acquired = await backend.acquire_lock("excl-lock", "node-2", ttl_seconds=30)
         assert acquired is False
         await backend.release_lock("excl-lock", "node-1")
 
     async def test_refresh_extends_lock(self, backend: Backend) -> None:
-        await backend.acquire_lock("ref-lock", "node-1", ttl=30)
-        await backend.refresh_lock("ref-lock", "node-1", ttl=60)
+        await backend.acquire_lock("ref-lock", "node-1", ttl_seconds=30)
+        await backend.refresh_lock("ref-lock", "node-1", ttl_seconds=60)
         # Lock still held by node-1
-        acquired = await backend.acquire_lock("ref-lock", "node-2", ttl=30)
+        acquired = await backend.acquire_lock("ref-lock", "node-2", ttl_seconds=30)
         assert acquired is False
         await backend.release_lock("ref-lock", "node-1")
 
@@ -206,7 +205,6 @@ class TestDLQContract:
         entry = DLQEntry(
             workflow_run_id="dlq-1",
             step_order=1,
-            step_name="step_a",
             error_message="boom",
         )
         await backend.add_dlq_entry(entry)
@@ -217,7 +215,6 @@ class TestDLQContract:
         entry = DLQEntry(
             workflow_run_id="dlq-get",
             step_order=1,
-            step_name="step_a",
             error_message="boom",
         )
         await backend.add_dlq_entry(entry)
@@ -237,13 +234,13 @@ class TestSignalContract:
     async def test_send_and_consume(self, backend: Backend) -> None:
         sig = Signal(
             workflow_run_id="sig-1",
-            name="approval",
-            data=b'{"approved": true}',
+            signal_name="approval",
+            signal_data=b'{"approved": true}',
         )
         await backend.send_signal(sig)
         got = await backend.consume_signal("sig-1", "approval")
         assert got is not None
-        assert got.data == b'{"approved": true}'
+        assert got.signal_data == b'{"approved": true}'
 
     async def test_consume_returns_none_when_absent(self, backend: Backend) -> None:
         got = await backend.consume_signal("no-run", "no-signal")

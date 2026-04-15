@@ -458,7 +458,8 @@ async def charge_card(self, order_id: str) -> dict:
 
 Gravtory is released under the
 [GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0-or-later).
-Commercial licensing is available for teams that require it.
+
+For commercial licensing inquiries, contact **vatryok@protonmail.com**.
 
 
 ## Contributing

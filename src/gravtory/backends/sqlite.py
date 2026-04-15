@@ -302,13 +302,7 @@ class SQLiteBackend(Backend):
                     (workflow_run_id, step_order, step_name, output_data,
                      output_type, duration_ms, retry_count, status, error_message)
                     VALUES (?,?,?,?,?,?,?,?,?)
-                    ON CONFLICT(workflow_run_id, step_order) DO UPDATE SET
-                        output_data=excluded.output_data,
-                        output_type=excluded.output_type,
-                        duration_ms=excluded.duration_ms,
-                        retry_count=excluded.retry_count,
-                        status=excluded.status,
-                        error_message=excluded.error_message""",
+                    ON CONFLICT(workflow_run_id, step_order) DO NOTHING""",
                 (
                     output.workflow_run_id,
                     output.step_order,

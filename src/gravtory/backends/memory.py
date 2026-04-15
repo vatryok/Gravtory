@@ -112,7 +112,13 @@ class InMemoryBackend(Backend):
             run.error_traceback = error_traceback
         if output_data is not None:
             run.output_data = output_data
-        if status == WorkflowStatus.COMPLETED:
+        if status in (
+            WorkflowStatus.COMPLETED,
+            WorkflowStatus.FAILED,
+            WorkflowStatus.COMPENSATED,
+            WorkflowStatus.COMPENSATION_FAILED,
+            WorkflowStatus.CANCELLED,
+        ):
             run.completed_at = _now()
 
     async def claim_workflow_run(

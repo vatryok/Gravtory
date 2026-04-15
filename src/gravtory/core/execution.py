@@ -923,6 +923,31 @@ class ExecutionEngine:
             if result.status != StepStatus.COMPLETED:
                 continue
 
+            # Reload output if it was evicted by _evict_consumed_outputs
+            if result.output is None:
+                so = await self._backend.get_step_output(run_id, order)
+                if so is not None and so.output_data is not None:
+                    output_data = so.output_data
+                    if (
+                        isinstance(output_data, (bytes, memoryview))
+                        and self._checkpoint is not None
+                    ):
+                        output_data = self._checkpoint.restore(
+                            bytes(output_data), aad=self._make_aad(run_id, order)
+                        )
+                    elif isinstance(output_data, (bytes, memoryview)):
+                        try:
+                            output_data = json.loads(output_data)
+                        except (json.JSONDecodeError, UnicodeDecodeError):
+                            pass
+                    result = StepResult(
+                        output=output_data,
+                        status=result.status,
+                        was_replayed=result.was_replayed,
+                        duration_ms=result.duration_ms,
+                        retry_count=result.retry_count,
+                    )
+
             try:
                 handler = self._registry.get_compensation_handler(
                     definition.name, step_def.compensate

@@ -17,11 +17,11 @@ COPY src/ src/
 RUN pip install --no-cache-dir ".[postgres,redis]"
 
 # Production image
-FROM python:3.12-slim AS production
+FROM python:${PYTHON_VERSION}-slim AS production
 
 WORKDIR /app
 
-COPY --from=base /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+COPY --from=base /usr/local/lib/ /usr/local/lib/
 COPY --from=base /usr/local/bin/gravtory /usr/local/bin/gravtory
 COPY --from=base /app /app
 

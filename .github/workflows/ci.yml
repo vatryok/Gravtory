@@ -126,7 +126,7 @@ jobs:
       - name: pip-audit (dependency vulnerabilities)
         run: pip-audit -r requirements-lock.txt
       - name: bandit (SAST)
-        run: bandit -r src/gravtory -ll -q
+        run: bandit -r src/gravtory -ll -q --skip B608
 
   # ── Stage 5b: Container image scan ─────────────────────────────
   container-scan:

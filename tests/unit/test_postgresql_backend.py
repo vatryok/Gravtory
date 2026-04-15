@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import pytest
+
+pytest.importorskip("asyncpg", reason="asyncpg not installed - skipping PostgreSQL backend tests")
+
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
-
-import pytest
 
 from gravtory.core.types import (
     Compensation,
