@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import pytest
 
-pytest.importorskip("redis", reason="redis not installed – skipping Redis backend tests")
+pytest.importorskip("redis", reason="redis not installed - skipping Redis backend tests")
 
 from datetime import datetime, timezone
 

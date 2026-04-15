@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import pytest
 
-pytest.importorskip("aiomysql", reason="aiomysql not installed – skipping MySQL backend tests")
+pytest.importorskip("aiomysql", reason="aiomysql not installed - skipping MySQL backend tests")
 
 from datetime import datetime, timezone
 

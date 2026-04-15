@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import pytest
 
-pytest.importorskip("motor", reason="motor not installed – skipping MongoDB backend tests")
+pytest.importorskip("motor", reason="motor not installed - skipping MongoDB backend tests")
 
 from datetime import datetime, timezone
 
