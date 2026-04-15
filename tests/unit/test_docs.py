@@ -96,7 +96,7 @@ class TestDocumentation:
         changelog = PROJECT_ROOT / "CHANGELOG.md"
         assert changelog.exists(), "CHANGELOG.md not found"
         content = changelog.read_text()
-        assert "0.1.0" in content, "CHANGELOG missing 0.1.0 entry"
+        assert "1.0.0" in content, "CHANGELOG missing 1.0.0 entry"
 
     def test_security_md_exists(self) -> None:
         """SECURITY.md exists at project root."""
