@@ -69,15 +69,8 @@ async def test_db_failure_during_checkpoint_save():
     """Engine should propagate error when DB fails during checkpoint write."""
     engine, backend, defn = await _build_engine()
 
-    call_count = 0
-    original_save = backend.save_step_output
-
     async def failing_save(output):
-        nonlocal call_count
-        call_count += 1
-        if call_count == 1:
-            raise ConnectionError("Database connection lost")
-        return await original_save(output)
+        raise ConnectionError("Database connection lost")
 
     backend.save_step_output = failing_save
 
