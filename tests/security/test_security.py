@@ -230,7 +230,7 @@ class TestHeaderInjection:
         async with TestClient(TestServer(app)) as client:
             # aiohttp >= 3.10 rejects CRLF in headers at the client level,
             # which is the correct security behaviour (prevents header injection).
-            with pytest.raises(ValueError, match="[Nn]ewline|[Cc]arriage|header injection"):
+            with pytest.raises(ValueError, match=r"[Nn]ewline|[Cc]arriage|header injection"):
                 await client.get(
                     "/api/health",
                     headers={"X-Custom": "value\r\nInjected: header"},
