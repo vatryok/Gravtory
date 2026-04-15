@@ -50,7 +50,7 @@ jobs:
         if: matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest'
         uses: codecov/codecov-action@v6
         with:
-          file: ./coverage.xml
+          files: ./coverage.xml
           flags: unit
 
   # ── Stage 3: Integration tests (backend matrix) ─────────────────

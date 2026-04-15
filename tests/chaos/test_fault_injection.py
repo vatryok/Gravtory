@@ -32,7 +32,7 @@ def _make_simple_workflow(step_fn=None):
     """Build a minimal workflow definition for testing."""
     if step_fn is None:
 
-        async def step_fn(ctx):
+        async def step_fn(**kwargs):
             return {"result": "ok"}
 
     return WorkflowDefinition(
@@ -95,7 +95,7 @@ async def test_db_failure_during_checkpoint_save():
 async def test_step_crash_marks_workflow_failed():
     """A step that crashes should result in FAILED workflow status."""
 
-    async def crashing_step(ctx):
+    async def crashing_step(**kwargs):
         raise RuntimeError("Simulated OOM crash")
 
     backend = InMemoryBackend()
@@ -175,11 +175,11 @@ async def test_concurrent_step_one_fails():
     """When parallel steps run and one fails, the failure should propagate."""
     call_order = []
 
-    async def good_step(ctx):
+    async def good_step(**kwargs):
         call_order.append("good")
         return {"status": "ok"}
 
-    async def bad_step(ctx):
+    async def bad_step(**kwargs):
         call_order.append("bad")
         raise ValueError("Step 2 failed")
 
