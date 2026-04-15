@@ -179,11 +179,11 @@ class SignalHandler:
         )
 
         try:
-            from gravtory.backends.postgresql import PostgreSQLBackend as _PGBackend
+            from gravtory.backends.postgresql import PostgreSQLBackend as _pg_backend_cls  # noqa: N812
         except ImportError:
-            _PGBackend = None  # type: ignore[assignment,misc]
+            _pg_backend_cls = None  # type: ignore[assignment]
 
-        if _PGBackend is not None and isinstance(backend, _PGBackend):
+        if _pg_backend_cls is not None and isinstance(backend, _pg_backend_cls):
             logger.info("Using PostgreSQL LISTEN/NOTIFY signal transport")
             return PostgreSQLSignalTransport(backend)
 
