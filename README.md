@@ -7,7 +7,6 @@
 Durable execution, distributed workers, sagas, scheduling, and observability,
 backed by the database you already run.
 
-[![PyPI](https://img.shields.io/pypi/v/gravtory.svg)](https://pypi.org/project/gravtory/)
 [![Python](https://img.shields.io/pypi/pyversions/gravtory.svg)](https://pypi.org/project/gravtory/)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 [![CI](https://github.com/vatryok/Gravtory/actions/workflows/ci.yml/badge.svg)](https://github.com/vatryok/Gravtory/actions)
