@@ -19,7 +19,7 @@ motor==3.7.1
 
 # Redis
 redis==7.4.0
-hiredis==3.3.1
+hiredis==3.4.0
 
 # Encryption
 cryptography==49.0.0
