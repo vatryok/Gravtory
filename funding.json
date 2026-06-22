@@ -1,0 +1,85 @@
+{
+    "$schema": "https://fundingjson.org/schema/v1.1.0.json",
+    "version": "v1.1.0",
+    "entity": {
+        "type": "individual",
+        "role": "owner",
+        "name": "vatryok",
+        "email": "vatryok@protonmail.com",
+        "description": "Independent open source developer building production-grade Python infrastructure. I created Gravtory to solve a real problem I faced: durable, crash-safe workflow execution without the overhead of message brokers or managed services. The project is actively used in production and I am seeking funding to continue full-time development.",
+        "webpageUrl": {
+            "url": "https://github.com/vatryok"
+        }
+    },
+    "projects": [{
+        "guid": "gravtory",
+        "name": "Gravtory",
+        "description": "Production-grade durable workflow engine for Python. Atomic checkpointing, saga compensation, parallel execution, and distributed workers — all powered by your existing database. No message broker required. Gravtory delivers Temporal-grade reliability as a single pip install, supporting PostgreSQL, SQLite, MySQL, MongoDB, and Redis backends. Built-in dashboard, OpenTelemetry support, type-safe API, in-memory testing framework, and native LLM/AI workflow support.",
+        "webpageUrl": {
+            "url": "https://github.com/vatryok/Gravtory"
+        },
+        "repositoryUrl": {
+            "url": "https://github.com/vatryok/Gravtory",
+            "wellKnown": "https://github.com/vatryok/Gravtory/blob/main/.well-known/funding-manifest-urls"
+        },
+        "licenses": ["spdx:AGPL-3.0-or-later"],
+        "tags": ["python", "workflow", "distributed-systems", "developer-tools", "infrastructure", "task-queue", "orchestration", "backend"]
+    }],
+    "funding": {
+        "channels": [
+            {
+                "guid": "kofi",
+                "type": "payment-provider",
+                "address": "https://ko-fi.com/gravtory",
+                "description": "Support via Ko-Fi — one-time or recurring."
+            },
+            {
+                "guid": "email-bank",
+                "type": "bank",
+                "address": "",
+                "description": "For larger grants or wire transfers, please contact vatryok@protonmail.com"
+            }
+        ],
+        "plans": [
+            {
+                "guid": "sustain-monthly",
+                "status": "active",
+                "name": "Sustainer — monthly development",
+                "description": "Covers my time to maintain the codebase, fix bugs, write documentation, and respond to community issues full-time.",
+                "amount": 1000,
+                "currency": "USD",
+                "frequency": "monthly",
+                "channels": ["kofi", "email-bank"]
+            },
+            {
+                "guid": "grant-onetime",
+                "status": "active",
+                "name": "Development grant — one-time",
+                "description": "One-time funding to accelerate development of major features: Django integration, cloud-native deployment tooling, performance benchmarking suite, and a public documentation site.",
+                "amount": 25000,
+                "currency": "USD",
+                "frequency": "one-time",
+                "channels": ["email-bank"]
+            },
+            {
+                "guid": "full-grant",
+                "status": "active",
+                "name": "Full year grant",
+                "description": "12 months of full-time development: stable v2.0 release, enterprise hardening, multi-cloud deployment guides, community building, and security audits.",
+                "amount": 100000,
+                "currency": "USD",
+                "frequency": "yearly",
+                "channels": ["email-bank"]
+            }
+        ],
+        "history": [
+            {
+                "year": 2026,
+                "income": 0,
+                "expenses": 0,
+                "currency": "USD",
+                "description": "First public release (v1.0.0) in April 2026. No external funding received to date. Project built entirely on personal time."
+            }
+        ]
+    }
+}
