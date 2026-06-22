@@ -48,7 +48,7 @@ jobs:
         run: pytest tests/unit/ --cov=gravtory --cov-report=xml -q --benchmark-disable
       - name: Upload coverage
         if: matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest'
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@v7
         with:
           files: ./coverage.xml
           flags: unit
