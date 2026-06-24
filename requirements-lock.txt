@@ -27,7 +27,7 @@ hiredis==3.4.0
 cryptography==49.0.0
 
 # Serialization
-msgpack==1.2.0
+msgpack==1.2.1
 lz4==4.4.5
 zstandard==0.25.0
 
