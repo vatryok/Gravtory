@@ -34,7 +34,7 @@ zstandard==0.25.0
 # Observability
 opentelemetry-api==1.42.1
 opentelemetry-sdk==1.41.0
-prometheus-client==0.25.0
+prometheus-client==0.26.0
 
 # AI
 tiktoken==0.13.0
