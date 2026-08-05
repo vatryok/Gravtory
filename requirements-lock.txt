@@ -24,7 +24,7 @@ redis==7.4.0
 hiredis==3.4.0
 
 # Encryption
-cryptography==49.0.0
+cryptography==50.0.0
 
 # Serialization
 msgpack==1.2.0
