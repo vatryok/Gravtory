@@ -18,7 +18,7 @@ aiomysql==0.3.2
 motor==3.7.1
 
 # Redis
-redis==8.0.0
+redis==8.1.0
 hiredis==3.3.1
 redis==7.4.0
 hiredis==3.4.0
