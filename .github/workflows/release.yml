@@ -20,7 +20,7 @@ jobs:
     environment: pypi
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - name: Install build tools
@@ -32,4 +32,4 @@ jobs:
           pip install dist/*.whl
           python -c "import gravtory; print(f'gravtory {gravtory.__version__}')"
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@v1.14.0
+        uses: pypa/gh-action-pypi-publish@v1.14.2
