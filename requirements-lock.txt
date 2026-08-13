@@ -26,6 +26,7 @@ cryptography==50.0.0
 
 # Serialization
 msgpack==1.2.1
+setuptools==78.1.1
 lz4==4.4.5
 zstandard==0.25.0
 
