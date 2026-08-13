@@ -1,7 +1,7 @@
-# Locked production dependencies for Gravtory v1.0.0
+# Locked production dependencies for Gravtory v1.1.0
 # Generated for reproducible builds (DEP-001).
 # Regenerate with: pip-compile --generate-hashes --output-file=requirements-lock.txt pyproject.toml
-# Updated: April 2026
+# Updated: August 2026
 #
 # Core
 click==8.4.2
@@ -20,8 +20,6 @@ motor==3.7.1
 # Redis
 redis==8.1.0
 hiredis==3.4.1
-redis==7.4.0
-hiredis==3.4.0
 
 # Encryption
 cryptography==50.0.0
