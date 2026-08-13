@@ -1,0 +1,91 @@
+{
+    "$schema": "https://fundingjson.org/schema/v1.1.0.json",
+    "version": "v1.1.0",
+    "entity": {
+        "type": "individual",
+        "role": "owner",
+        "name": "vatryok",
+        "email": "vatryok@protonmail.com",
+        "description": "Independent open source developer building production-grade Python infrastructure.",
+        "webpageUrl": {
+            "url": "https://github.com/vatryok"
+        }
+    },
+    "projects": [
+        {
+            "guid": "gravtory",
+            "name": "Gravtory",
+            "description": "Production-grade durable workflow engine for Python. Atomic checkpointing, saga compensation, parallel execution, and distributed workers, all powered by your existing database. No message broker required.",
+            "webpageUrl": {
+                "url": "https://github.com/vatryok/Gravtory"
+            },
+            "repositoryUrl": {
+                "url": "https://github.com/vatryok/Gravtory"
+            },
+            "licenses": [
+                "spdx:AGPL-3.0-or-later"
+            ],
+            "tags": [
+                "programming",
+                "developer-tools",
+                "python",
+                "workflow-engine",
+                "durable-execution",
+                "distributed-systems",
+                "microservices",
+                "task-queue"
+            ]
+        }
+    ],
+    "funding": {
+        "channels": [
+            {
+                "guid": "commercial-email",
+                "type": "other",
+                "address": "vatryok@protonmail.com",
+                "description": "Contact for commercial licensing inquiries and priority support."
+            },
+            {
+                "guid": "kofi",
+                "type": "payment-provider",
+                "address": "https://ko-fi.com/vatryok",
+                "description": "Support ongoing open-source development via Ko-Fi."
+            }
+        ],
+        "plans": [
+            {
+                "guid": "full-time-development",
+                "status": "active",
+                "name": "Full-Time Development Fund",
+                "description": "Funding to continue full-time development, maintenance, and realization of the project roadmap.",
+                "amount": 0,
+                "currency": "USD",
+                "frequency": "monthly",
+                "channels": [
+                    "kofi",
+                    "commercial-email"
+                ]
+            },
+            {
+                "guid": "commercial-license",
+                "status": "active",
+                "name": "Commercial License",
+                "description": "For organizations that wish to use Gravtory in proprietary applications or services without the open-source requirements of AGPL-3.0.",
+                "amount": 0,
+                "currency": "USD",
+                "frequency": "one-time",
+                "channels": [
+                    "commercial-email"
+                ]
+            }
+        ],
+        "history": [
+            {
+                "year": 2026,
+                "income": 0,
+                "currency": "USD",
+                "description": "No external funding received to date. Project built entirely on personal time."
+            }
+        ]
+    }
+}
