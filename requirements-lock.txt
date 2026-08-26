@@ -36,7 +36,7 @@ opentelemetry-sdk==1.44.0
 prometheus-client==0.26.0
 
 # AI
-tiktoken==0.13.0
+tiktoken==0.14.0
 
 # Pydantic
 pydantic==2.13.4
